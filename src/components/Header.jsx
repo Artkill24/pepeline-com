@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 export default function Header() {
     return (
@@ -11,39 +10,36 @@ export default function Header() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
         >
-            {/* Logo */}
+            {/* Logo Emoji */}
             <motion.div
                 className="flex justify-center mb-6"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ 
-                    duration: 0.8, 
+                transition={{
+                    duration: 0.8,
                     ease: 'easeOut',
                     type: 'spring',
-                    stiffness: 200 
+                    stiffness: 200
                 }}
             >
                 <motion.div
-                    className="relative w-40 h-40"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="text-9xl cursor-pointer select-none"
+                    whileHover={{ scale: 1.15, rotate: 10 }}
+                    whileTap={{ scale: 0.9 }}
                     animate={{
-                        y: [0, -10, 0],
+                        y: [0, -15, 0],
                     }}
                     transition={{
-                        duration: 2,
+                        duration: 2.5,
                         repeat: Infinity,
                         ease: 'easeInOut'
                     }}
+                    style={{
+                        filter: 'drop-shadow(0 0 40px rgba(16, 185, 129, 0.6))',
+                        WebkitTextStroke: '2px rgba(16, 185, 129, 0.3)'
+                    }}
                 >
-                    <Image
-                        src="/pepeline-logo.png"
-                        alt="Pepeline Logo"
-                        width={160}
-                        height={160}
-                        className="drop-shadow-2xl"
-                        priority
-                    />
+                    🐸
                 </motion.div>
             </motion.div>
 
