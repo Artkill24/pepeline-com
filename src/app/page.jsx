@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import IndexDisplay3D from '@/components/IndexDisplay3D';
 import AboutSection3D from '@/components/AboutSection3D';
+import Roadmap from '@/components/Roadmap';
 import ShareButton3D from '@/components/ShareButton3D';
 import Footer from '@/components/Footer';
 
@@ -44,7 +45,7 @@ export default function Home() {
                 {/* Header with Logo */}
                 <Header />
 
-                {/* Index */}
+                {/* Index Display */}
                 <IndexDisplay3D data={data} />
 
                 {/* CTA */}
@@ -69,6 +70,9 @@ export default function Home() {
 
                 {/* About & How It Works */}
                 <AboutSection3D />
+
+                {/* Roadmap */}
+                <Roadmap />
 
                 {/* Footer */}
                 <Footer />
