@@ -1,4 +1,5 @@
 import './globals.css'
+import { Analytics } from '@vercel/analytics/react'
 
 export const metadata = {
   title: 'Pepeline - Crypto Sentiment Engine',
@@ -10,13 +11,7 @@ export const metadata = {
     description: 'Real-time crypto market sentiment tracking with AI-powered insights',
     url: 'https://pepeline.com',
     siteName: 'Pepeline',
-    images: [
-      {
-        url: '/pepeline-logo.png',
-        width: 1200,
-        height: 630,
-      },
-    ],
+    images: [{ url: '/pepeline-logo.png', width: 1200, height: 630 }],
     locale: 'en_US',
     type: 'website',
   },
@@ -34,7 +29,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   )
 }
