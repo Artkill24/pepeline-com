@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function Roadmap() {
     const features = [
@@ -17,10 +18,11 @@ export default function Roadmap() {
             status: 'live'
         },
         { 
-            icon: '🚧', 
+            icon: '✅', 
             title: 'Individual Coins', 
             desc: 'Track sentiment for 100+ coins',
-            status: 'coming'
+            status: 'live',
+            link: '/coins'
         },
         { 
             icon: '🔜', 
@@ -64,34 +66,30 @@ export default function Roadmap() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: idx * 0.1 }}
-                        className={`p-6 rounded-xl border ${
-                            feature.status === 'live' 
-                                ? 'bg-green-500/10 border-green-500/30' 
-                                : feature.status === 'coming'
-                                ? 'bg-blue-500/10 border-blue-500/30'
-                                : 'bg-gray-500/10 border-gray-500/30'
-                        }`}
                     >
-                        <div className="flex items-start gap-4">
-                            <span className="text-4xl">{feature.icon}</span>
-                            <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-2">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-gray-400 text-sm mb-3">
-                                    {feature.desc}
-                                </p>
-                                <span className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
+                        {feature.link ? (
+                            <Link href={feature.link}>
+                                <div className={`p-6 rounded-xl border cursor-pointer hover:scale-105 transition ${
                                     feature.status === 'live' 
-                                        ? 'bg-green-500 text-white' 
+                                        ? 'bg-green-500/10 border-green-500/30 hover:border-green-500/50' 
                                         : feature.status === 'coming'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-600 text-gray-300'
+                                        ? 'bg-blue-500/10 border-blue-500/30'
+                                        : 'bg-gray-500/10 border-gray-500/30'
                                 }`}>
-                                    {feature.status}
-                                </span>
+                                    <FeatureContent feature={feature} />
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className={`p-6 rounded-xl border ${
+                                feature.status === 'live' 
+                                    ? 'bg-green-500/10 border-green-500/30' 
+                                    : feature.status === 'coming'
+                                    ? 'bg-blue-500/10 border-blue-500/30'
+                                    : 'bg-gray-500/10 border-gray-500/30'
+                            }`}>
+                                <FeatureContent feature={feature} />
                             </div>
-                        </div>
+                        )}
                     </motion.div>
                 ))}
             </div>
@@ -114,6 +112,31 @@ export default function Roadmap() {
                     </a>
                 </p>
             </motion.div>
+        </div>
+    );
+}
+
+function FeatureContent({ feature }) {
+    return (
+        <div className="flex items-start gap-4">
+            <span className="text-4xl">{feature.icon}</span>
+            <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">
+                    {feature.title}
+                </h3>
+                <p className="text-gray-400 text-sm mb-3">
+                    {feature.desc}
+                </p>
+                <span className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
+                    feature.status === 'live' 
+                        ? 'bg-green-500 text-white' 
+                        : feature.status === 'coming'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-600 text-gray-300'
+                }`}>
+                    {feature.status}
+                </span>
+            </div>
         </div>
     );
 }
