@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import IndexDisplay3D from '@/components/IndexDisplay3D';
 import AboutSection3D from '@/components/AboutSection3D';
-import TopCoinsSection from '@/components/TopCoinsSection';
 import Roadmap from '@/components/Roadmap';
 import ShareButton3D from '@/components/ShareButton3D';
 import Footer from '@/components/Footer';
@@ -46,10 +45,10 @@ export default function Home() {
                 {/* Header with Logo */}
                 <Header />
 
-                {/* Main Pepeline Index Display */}
+                {/* Index Display */}
                 <IndexDisplay3D data={data} />
 
-                {/* Share CTA */}
+                {/* CTA */}
                 {data && (
                     <motion.div
                         className="text-center mt-16"
@@ -68,9 +67,6 @@ export default function Home() {
                         </motion.p>
                     </motion.div>
                 )}
-
-                {/* NEW: Top 10 Coins Section */}
-                <TopCoinsSection />
 
                 {/* About & How It Works */}
                 <AboutSection3D />
