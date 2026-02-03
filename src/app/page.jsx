@@ -8,6 +8,7 @@ import AboutSection3D from '@/components/AboutSection3D';
 import TopCoinsSection from '@/components/TopCoinsSection';
 import MarketBrief from '@/components/MarketBrief';
 import Roadmap from '@/components/Roadmap';
+import SEOContent from '@/components/SEOContent';
 import ShareButton3D from '@/components/ShareButton3D';
 import Footer from '@/components/Footer';
 
@@ -68,6 +69,7 @@ export default function Home() {
                 <MarketBrief />
                 <TopCoinsSection />
                 <AboutSection3D />
+                <SEOContent />
                 <Roadmap />
                 <Footer />
             </div>
