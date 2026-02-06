@@ -1,53 +1,30 @@
-import { NextResponse } from 'next/server';
-import PepelineIndex from '@/lib/pepeline-calculator';
-import { getHistoryManager } from '@/lib/history-manager';
+import { calculatePepelineIndex } from '@/lib/pepeline-calculator';
+import { getCache, setCache } from '@/lib/cache-helper';
 
-let cachedData = null;
-let lastUpdate = null;
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const now = Date.now();
-        const historyManager = getHistoryManager();
-
-        // Cache di 1 ora
-        if (cachedData && lastUpdate && (now - lastUpdate < 3600000)) {
-            return NextResponse.json({
-                ...cachedData,
-                cached: true,
-                nextUpdateIn: Math.ceil((3600000 - (now - lastUpdate)) / 1000) // secondi rimanenti
-            });
+        // Check cache first (30 second TTL)
+        const cached = getCache('pepeline-index');
+        if (cached) {
+            return Response.json(cached);
         }
 
-        // Calcola nuovo indice
-        const calculator = new PepelineIndex();
-        const result = await calculator.calculate();
-
-        // Aggiungi allo storico
-        historyManager.addEntry(result);
-
-        // Calcola trend
-        const trend = historyManager.calculateTrend(result.index);
-        const historical = historyManager.getHistoricalComparison(result.index);
-
-        // Aggiorna cache
-        cachedData = {
-            ...result,
-            trend,
-            historical
-        };
-        lastUpdate = now;
-
-        return NextResponse.json({
-            ...cachedData,
-            cached: false,
-            nextUpdateIn: 3600 // 1 ora in secondi
-        });
-
+        const index = await calculatePepelineIndex();
+        
+        // Cache result
+        setCache('pepeline-index', index, 30);
+        
+        return Response.json(index);
+        
     } catch (error) {
-        return NextResponse.json(
-            { error: 'Failed to calculate index' },
-            { status: 500 }
-        );
+        console.error('Index API error:', error);
+        return Response.json({
+            index: 50,
+            level: 'NEUTRAL',
+            emoji: '😐',
+            error: 'Calculation failed'
+        }, { status: 500 });
     }
 }

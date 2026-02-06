@@ -1,9 +1,24 @@
-import { TwitterApi } from 'twitter-api-v2';
+let TwitterApi;
+
+// Dynamic import to handle missing package
+try {
+    TwitterApi = require('twitter-api-v2').TwitterApi;
+} catch (error) {
+    console.error('⚠️ twitter-api-v2 not installed. Run: npm install twitter-api-v2');
+}
 
 let twitterClient = null;
 
 function getTwitterClient() {
+    if (!TwitterApi) {
+        throw new Error('twitter-api-v2 package not installed');
+    }
+
     if (!twitterClient) {
+        if (!process.env.X_API_KEY || !process.env.X_ACCESS_TOKEN) {
+            throw new Error('Twitter credentials not configured in .env.local');
+        }
+
         twitterClient = new TwitterApi({
             appKey: process.env.X_API_KEY,
             appSecret: process.env.X_API_SECRET,
@@ -18,11 +33,22 @@ export async function postToTwitter(text) {
     try {
         const client = getTwitterClient();
         const tweet = await client.v2.tweet(text);
-        console.log('✅ Tweet posted:', tweet.data.id);
+        console.log('✅ Tweet posted successfully:', tweet.data.id);
         return { success: true, id: tweet.data.id };
     } catch (error) {
-        console.error('❌ Twitter error:', error);
-        return { success: false, error: error.message };
+        console.error('❌ Twitter API error:', error);
+        
+        // Better error messages
+        let errorMessage = error.message;
+        if (error.code === 401) {
+            errorMessage = 'Invalid Twitter credentials. Check your API keys.';
+        } else if (error.code === 403) {
+            errorMessage = 'Access forbidden. Make sure your app has write permissions.';
+        } else if (error.code === 429) {
+            errorMessage = 'Rate limit exceeded. Try again later.';
+        }
+        
+        return { success: false, error: errorMessage };
     }
 }
 
