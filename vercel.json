@@ -1,20 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "crons": [
     {
-      "path": "/api/post-tweet",
-      "schedule": "0 12 * * *"
+      "path": "/api/alerts/check",
+      "schedule": "*/15 * * * *"
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  },
   "headers": [
     {
       "source": "/api/(.*)",

@@ -118,3 +118,12 @@ export default function AdminDashboard() {
         </main>
     );
 }
+
+// Add import at top
+import BacktestingDashboard from '@/components/BacktestingDashboard';
+
+// Add section before Quick Actions:
+                    {/* Backtesting Section */}
+                    <div className="mt-12">
+                        <BacktestingDashboard />
+                    </div>
