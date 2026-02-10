@@ -131,7 +131,7 @@ export default function IndexDisplay3D({ data }) {
                 variants={containerVariants}
                 className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
-                {Object.entries(components).map(([key, value], idx) => (
+                {components && Object.entries(components).map(([key, value], idx) => (
                     <motion.div
                         key={key}
                         variants={itemVariants}

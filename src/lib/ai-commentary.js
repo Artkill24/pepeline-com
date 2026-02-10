@@ -1,115 +1,122 @@
-// AI-style commentary generator basato su regole intelligenti
+// AI Commentary Generator
 
-export function generateCommentary(indexData) {
-    const { index, level, components } = indexData;
-    
-    // Analizza i pattern
-    const sentiment = components.sentiment;
-    const volatility = components.volatility;
-    const fomo = components.fomo;
-    const meme = components.meme;
-    
-    // Determina il "mood" del mercato
-    const isExtreme = index > 80 || index < 20;
-    const isVolatile = volatility > 60;
-    const isFOMO = fomo > 60;
-    const isDegen = meme > 60;
-    
-    // Seleziona commentary in base ai pattern
-    let commentary = '';
-    
-    // Peak Degen Zone (80-100)
-    if (index > 80) {
-        const options = [
-            "Everyone's a genius right now. Your Uber driver is probably giving crypto tips. This is when smart money takes profits. 🚩",
-            "Peak euphoria detected. The 'I told you so' tweets are warming up in drafts. History suggests caution here. 💎",
-            "When retail is this confident, institutions are usually selling. But hey, this time might be different... right? 🤡",
-            "Maximum greed unlocked. Even the skeptics are FOMOing in. Textbook top signal, but timing is everything. ⚠️",
-            "Your portfolio is up, your ego is up, risk management is... where? Classic late-cycle vibes. 🎢"
-        ];
-        commentary = options[Math.floor(Math.random() * options.length)];
+export function generateCommentary(index, components) {
+    if (!components || typeof index !== 'number') {
+        return {
+            title: "Market Analysis",
+            analysis: "Loading market data...",
+            recommendation: "Please wait",
+            confidence: "low"
+        };
     }
-    
-    // Hyped Zone (60-80)
-    else if (index > 60) {
-        const options = [
-            "Things are heating up. Twitter timeline full of rocket emojis. Not quite euphoria, but getting there. 🚀",
-            "FOMO levels rising. This is where most people finally decide to buy... usually near local tops. 📈",
-            "Market getting spicy. Good time to take some profits if you're up. Or double down if you're feeling lucky. 🎲",
-            "Excitement in the air. Everyone's checking prices. Pro tip: this is when mistakes happen. Stay sharp. ⚡",
-            "Hype building. Discord servers buzzing. Just remember: when everyone's buying, who's selling? 🤔"
-        ];
-        commentary = options[Math.floor(Math.random() * options.length)];
+
+    const sentiment = components.sentiment || 0;
+    const volatility = components.volatility || 0;
+    const fomo = components.fomo || 0;
+    const meme = components.meme || 0;
+
+    let title = "";
+    let analysis = "";
+    let recommendation = "";
+    let confidence = "medium";
+
+    if (index >= 80) {
+        title = "🤑 EXTREME GREED";
+        analysis = `Market showing extreme greed at ${index}. `;
+        if (fomo > 70) analysis += "FOMO driving unsustainable levels. ";
+        if (meme > 50) analysis += "Meme coins pumping - typical market top. ";
+        recommendation = "SELL: Take profits. Historic corrections follow extreme greed.";
+        confidence = "high";
     }
-    
-    // Active Zone (40-60)
-    else if (index > 40) {
-        const options = [
-            "Healthy market activity. Not too hot, not too cold. This is actually when good trades happen. 📊",
-            "Goldilocks zone. Some fear, some greed, normal volatility. Boring is beautiful in crypto. ✨",
-            "Balanced vibes. Market doing market things. No extreme emotions = better decisions usually. 🧘",
-            "Normal mode activated. Good time to accumulate positions without the noise. Build in silence. 🔨",
-            "Steady state. The calm between the storms. Smart money works in the shadows during these times. 🌙"
-        ];
-        commentary = options[Math.floor(Math.random() * options.length)];
+    else if (index >= 60) {
+        title = "😊 GREED";
+        analysis = `Bullish sentiment at ${index}. `;
+        if (volatility < 30) analysis += "Low volatility suggests stable uptrend. ";
+        recommendation = "HOLD: Market healthy but watch for overheating.";
     }
-    
-    // Neutral/Calm Zone (20-40)
-    else if (index > 20) {
-        const options = [
-            "Quiet... too quiet. Either accumulation or apathy. Historically, this is where opportunities hide. 👀",
-            "Low energy markets. Retail left, degens sleeping. OGs know this is when you build positions. 🏗️",
-            "Crickets on Crypto Twitter. Trading volumes low. This is either the bottom or close to it. 🦗",
-            "Market depression setting in. Everyone's 'done with crypto' again. Smart money: 'Finally, some peace.' 😌",
-            "Fear dominating. Capitulation might be near. Remember: best entries happen when nobody cares. 💰"
-        ];
-        commentary = options[Math.floor(Math.random() * options.length)];
+    else if (index >= 40) {
+        title = "😐 NEUTRAL";
+        analysis = `Balanced market at ${index}. `;
+        recommendation = "WAIT: Look for clearer signals.";
     }
-    
-    // Extreme Calm/Bottom (0-20)
+    else if (index >= 20) {
+        title = "😟 FEAR";
+        analysis = `Fear building at ${index}. `;
+        if (volatility > 50) analysis += "High volatility signals uncertainty. ";
+        recommendation = "WATCH: Fear can present opportunities.";
+    }
     else {
-        const options = [
-            "Maximum despair. Even the memes stopped. This is where generational wealth gets built... or lost. Choose wisely. 🏴‍☠️",
-            "Dead silent. Last bull market's heroes are gone. Only the true believers remain. Accumulation season? 🌱",
-            "Nuclear winter vibes. Everyone quit. Your normie friends think crypto died. History says: pay attention. 🧊",
-            "Bottom indicators flashing. When nobody wants it, that's when you should want it. Not financial advice though. 🎯",
-            "Peak pessimism. The opposite of euphoria. Markets are irrational longer than you can stay solvent. But still... 👁️"
-        ];
-        commentary = options[Math.floor(Math.random() * options.length)];
+        title = "😱 EXTREME FEAR";
+        analysis = `Extreme fear at ${index}. `;
+        if (sentiment < 20) analysis += "Historic buy opportunity. ";
+        recommendation = "BUY: Contrarian opportunity. DCA on the way down.";
+        confidence = "high";
     }
-    
-    // Aggiungi note speciali per pattern specifici
-    if (isVolatile && !isExtreme) {
-        commentary += " High volatility without extreme sentiment = potential opportunity.";
-    }
-    
-    if (isDegen && index < 50) {
-        commentary += " Meme coins pumping in a down market? Interesting divergence. 🤨";
-    }
-    
-    return commentary;
+
+    return { title, analysis, recommendation, confidence };
 }
 
-// Genera un insight aggiuntivo basato sui componenti
+// Generate AI insight from index data
 export function generateInsight(indexData) {
-    const { components } = indexData;
-    const { sentiment, volatility, fomo, meme } = components;
-    
-    // Trova il componente dominante
-    const max = Math.max(sentiment, volatility, fomo, meme);
-    
-    if (max === volatility && volatility > 60) {
-        return "⚡ Volatility is the main driver right now. Expect sharp moves.";
+    if (!indexData || !indexData.breakdown) {
+        return {
+            summary: "Loading market insights...",
+            signals: [],
+            confidence: "low"
+        };
     }
-    if (max === fomo && fomo > 60) {
-        return "🚀 FOMO levels high. Retail might be rushing in.";
+
+    const { index, breakdown } = indexData;
+    const signals = [];
+
+    // Analyze sentiment
+    if (breakdown.sentiment > 70) {
+        signals.push({ type: "warning", text: "Extreme positive sentiment - potential reversal" });
+    } else if (breakdown.sentiment < 30) {
+        signals.push({ type: "opportunity", text: "Extreme negative sentiment - potential bottom" });
     }
-    if (max === meme && meme > 50) {
-        return "🎪 Meme coin season? Degen activity detected.";
+
+    // Analyze volatility
+    if (breakdown.volatility > 60) {
+        signals.push({ type: "warning", text: "High volatility - increased risk" });
+    } else if (breakdown.volatility < 20) {
+        signals.push({ type: "info", text: "Low volatility - stable conditions" });
     }
-    if (sentiment < 30 && volatility < 40) {
-        return "😴 Low conviction, low action. Accumulation phase?";
+
+    // Analyze FOMO
+    if (breakdown.fomo > 70) {
+        signals.push({ type: "warning", text: "FOMO levels extreme - bubble risk" });
     }
-    
-    return "📊 All metrics balanced. Market in equilibrium.";
+
+    // Analyze meme intensity
+    if (breakdown.meme > 50) {
+        signals.push({ type: "warning", text: "Meme coin mania - retail speculation high" });
+    }
+
+    // Generate summary
+    let summary = "";
+    if (index >= 80) {
+        summary = "Market is overheated. Consider taking profits.";
+    } else if (index >= 60) {
+        summary = "Bullish conditions with some caution needed.";
+    } else if (index >= 40) {
+        summary = "Market is balanced. Wait for clear signals.";
+    } else if (index >= 20) {
+        summary = "Fear is building. Opportunities may emerge.";
+    } else {
+        summary = "Extreme fear presents contrarian buying opportunity.";
+    }
+
+    const confidence = signals.length > 2 ? "high" : "medium";
+
+    return { summary, signals, confidence };
+}
+
+export function getConfidenceColor(confidence) {
+    switch(confidence) {
+        case 'high': return 'text-green-400';
+        case 'medium': return 'text-yellow-400';
+        case 'low': return 'text-red-400';
+        default: return 'text-gray-400';
+    }
 }

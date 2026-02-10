@@ -1,3 +1,8 @@
+#!/bin/bash
+
+echo "Creating page.jsx..."
+
+cat > src/app/page.jsx << 'EOF'
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -160,3 +165,6 @@ export default function Home() {
     </main>
   );
 }
+EOF
+
+echo "✅ File created successfully!"
