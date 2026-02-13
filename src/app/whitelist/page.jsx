@@ -54,7 +54,7 @@ export default function WhitelistPage() {
     };
 
     const handleConnect = () => {
-        if (!inputWallet || inputWallet.length < 32) {
+        if (!inputWallet || inputWallet.length < 32 || inputWallet.length > 44) {
             setMessage({ type: 'error', text: 'Enter a valid Solana wallet address' });
             return;
         }
