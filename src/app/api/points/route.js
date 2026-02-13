@@ -1,54 +1,49 @@
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
+function getAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_KEY
+    );
+}
+
 const POINTS_CONFIG = {
-    daily_visit: { points: 5, daily: true },
-    telegram_bot: { points: 10, daily: true },
-    connect_wallet: { points: 20, daily: false },
-    share_twitter: { points: 15, daily: true, maxPerDay: 3 },
-    refer_friend: { points: 25, daily: false },
-    read_brief: { points: 3, daily: true },
-    use_dashboard: { points: 5, daily: true },
+    daily_visit:     { points: 5,  daily: true,  maxPerDay: 1 },
+    telegram_bot:    { points: 10, daily: true,  maxPerDay: 1 },
+    connect_wallet:  { points: 20, daily: false },
+    share_twitter:   { points: 15, daily: true,  maxPerDay: 3 },
+    refer_friend:    { points: 25, daily: false },
+    read_brief:      { points: 3,  daily: true,  maxPerDay: 1 },
+    use_dashboard:   { points: 5,  daily: true,  maxPerDay: 1 },
 };
 
-// GET - fetch user points
+// GET - fetch user or leaderboard
 export async function GET(request) {
+    const supabaseAdmin = getAdmin();
     const { searchParams } = new URL(request.url);
     const wallet = searchParams.get('wallet');
 
     if (!wallet) {
-        // Return leaderboard
         const { data, error } = await supabaseAdmin
             .from('whitelist_users')
             .select('wallet_address, points, whitelisted')
             .order('points', { ascending: false })
             .limit(100);
 
-        if (error) return Response.json({ error: error.message }, { status: 500 });
-
-        return Response.json({
-            leaderboard: data,
-            total: data.length
-        });
+        if (error) return Response.json({ leaderboard: [], total: 0 });
+        return Response.json({ leaderboard: data || [], total: data?.length || 0 });
     }
 
-    // Return specific user
     const { data, error } = await supabaseAdmin
         .from('whitelist_users')
         .select('*')
         .eq('wallet_address', wallet.toLowerCase())
         .single();
 
-    if (error && error.code !== 'PGRST116') {
-        return Response.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return Response.json({ exists: false, points: 0 });
 
-    if (!data) {
-        return Response.json({ exists: false, points: 0 });
-    }
-
-    // Get rank
     const { count } = await supabaseAdmin
         .from('whitelist_users')
         .select('*', { count: 'exact', head: true })
@@ -63,8 +58,9 @@ export async function GET(request) {
     });
 }
 
-// POST - add points for action
+// POST - earn points
 export async function POST(request) {
+    const supabaseAdmin = getAdmin();
     try {
         const body = await request.json();
         const { wallet, action, telegram_handle, twitter_handle, referral_code } = body;
@@ -75,10 +71,7 @@ export async function POST(request) {
 
         const walletLower = wallet.toLowerCase();
         const config = POINTS_CONFIG[action];
-
-        if (!config) {
-            return Response.json({ error: 'Invalid action' }, { status: 400 });
-        }
+        if (!config) return Response.json({ error: 'Invalid action' }, { status: 400 });
 
         // Get or create user
         let { data: user } = await supabaseAdmin
@@ -88,7 +81,6 @@ export async function POST(request) {
             .single();
 
         if (!user) {
-            // Create new user
             const { data: newUser, error: createError } = await supabaseAdmin
                 .from('whitelist_users')
                 .insert({
@@ -107,15 +99,23 @@ export async function POST(request) {
             if (createError) return Response.json({ error: createError.message }, { status: 500 });
             user = newUser;
 
-            // Handle referral
+            // Credit referrer
             if (referral_code) {
-                await supabaseAdmin
+                const { data: referrer } = await supabaseAdmin
                     .from('whitelist_users')
-                    .update({
-                        points: supabaseAdmin.raw('points + 25'),
-                        referrals: supabaseAdmin.raw('referrals + 1')
-                    })
-                    .eq('wallet_address', referral_code.toLowerCase());
+                    .select('points, referrals')
+                    .eq('wallet_address', referral_code.toLowerCase())
+                    .single();
+
+                if (referrer) {
+                    await supabaseAdmin
+                        .from('whitelist_users')
+                        .update({
+                            points: referrer.points + 25,
+                            referrals: (referrer.referrals || 0) + 1
+                        })
+                        .eq('wallet_address', referral_code.toLowerCase());
+                }
             }
         }
 
@@ -124,10 +124,10 @@ export async function POST(request) {
             const today = new Date().toISOString().split('T')[0];
             const { data: todayActions } = await supabaseAdmin
                 .from('point_actions')
-                .select('*')
+                .select('id')
                 .eq('wallet_address', walletLower)
                 .eq('action', action)
-                .gte('created_at', today);
+                .gte('created_at', today + 'T00:00:00.000Z');
 
             const maxToday = config.maxPerDay || 1;
             if (todayActions && todayActions.length >= maxToday) {
@@ -138,10 +138,9 @@ export async function POST(request) {
                 });
             }
         } else {
-            // Check if already done (non-daily)
             const { data: existingAction } = await supabaseAdmin
                 .from('point_actions')
-                .select('*')
+                .select('id')
                 .eq('wallet_address', walletLower)
                 .eq('action', action)
                 .single();
@@ -156,7 +155,7 @@ export async function POST(request) {
         }
 
         // Add points
-        const newPoints = user.points + config.points;
+        const newPoints = (user.points || 0) + config.points;
         const updates = {
             points: newPoints,
             updated_at: new Date().toISOString(),
@@ -193,6 +192,7 @@ export async function POST(request) {
         });
 
     } catch (error) {
+        console.error('Points error:', error);
         return Response.json({ error: error.message }, { status: 500 });
     }
 }
