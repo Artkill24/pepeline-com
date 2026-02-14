@@ -11,6 +11,7 @@ import Roadmap from '@/components/Roadmap';
 import Footer from '@/components/Footer';
 import SEOContent from '@/components/SEOContent';
 import AutoTweetButton from '@/components/AutoTweetButton';
+import IndexHistoryChart from '@/components/IndexHistoryChart';
 
 const TICKER_COINS = ['ETH', 'BTC', 'PEPE', 'LINK', 'UNI', 'SHIB', 'AAVE', 'DAI'];
 
@@ -158,6 +159,7 @@ export default function Home() {
                   <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
                   <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border border-purple-500/30"></div>
                 </div>
+                <IndexHistoryChart />
                 <p className="text-gray-400 text-sm">Fetching on-chain data...</p>
               </div>
             </div>
