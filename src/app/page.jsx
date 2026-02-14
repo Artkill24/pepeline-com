@@ -4,16 +4,14 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import IndexDisplay3D from '@/components/IndexDisplay3D';
+import IndexInlineDisplay from '@/components/IndexInlineDisplay';
+import IndexHistoryChart from '@/components/IndexHistoryChart';
 import TopCoinsSection from '@/components/TopCoinsSection';
 import MarketBrief from '@/components/MarketBrief';
 import Roadmap from '@/components/Roadmap';
 import Footer from '@/components/Footer';
 import SEOContent from '@/components/SEOContent';
 import AutoTweetButton from '@/components/AutoTweetButton';
-import IndexHistoryChart from '@/components/IndexHistoryChart';
-
-const TICKER_COINS = ['ETH', 'BTC', 'PEPE', 'LINK', 'UNI', 'SHIB', 'AAVE', 'DAI'];
 
 export default function Home() {
   const [index, setIndex] = useState(null);
@@ -76,24 +74,26 @@ export default function Home() {
       <Header />
 
       {/* Live Ticker Bar */}
-      <div className="w-full bg-purple-950/40 border-y border-purple-800/30 overflow-hidden py-2">
-        <motion.div
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-          className="flex gap-8 whitespace-nowrap"
-        >
-          {[...coins, ...coins].map((coin, i) => (
-            <span key={i} className="flex items-center gap-2 text-sm">
-              <span className="text-gray-400">{coin.symbol}</span>
-              <span className="font-semibold">{formatPrice(coin.price)}</span>
-              <span className={coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>
-                {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}%
+      {coins.length > 0 && (
+        <div className="w-full bg-purple-950/40 border-y border-purple-800/30 overflow-hidden py-2">
+          <motion.div
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+            className="flex gap-8 whitespace-nowrap"
+          >
+            {[...coins, ...coins].map((coin, i) => (
+              <span key={i} className="flex items-center gap-2 text-sm">
+                <span className="text-gray-400">{coin.symbol}</span>
+                <span className="font-semibold">{formatPrice(coin.price)}</span>
+                <span className={coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}%
+                </span>
+                <span className="text-purple-700 mx-2">|</span>
               </span>
-              <span className="text-purple-700 mx-2">|</span>
-            </span>
-          ))}
-        </motion.div>
-      </div>
+            ))}
+          </motion.div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-12 relative z-10">
 
@@ -115,7 +115,7 @@ export default function Home() {
           <h1 className="text-6xl md:text-8xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400">
             Pepeline
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-2 font-light">
+          <p className="text-xl md:text-2xl text-gray-300 mb-4 font-light">
             Real-Time Crypto Sentiment Intelligence
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap mb-6">
@@ -133,24 +133,27 @@ export default function Home() {
           )}
 
           {/* CTA Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-4">
-            <Link href="/dashboard" className="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-900/40">
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/dashboard"
+              className="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-900/40">
               📊 Dashboard
             </Link>
-            <Link href="/whitelist" className="px-8 py-4 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-pink-900/40">
+            <Link href="/whitelist"
+              className="px-8 py-4 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-pink-900/40">
               🎯 Get Whitelist
             </Link>
             <a href="https://t.me/Pepelinebot" target="_blank" rel="noopener noreferrer"
               className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-blue-900/30">
               🤖 Telegram
             </a>
-            <Link href="/coins" className="px-8 py-4 bg-gray-800/80 hover:bg-gray-700/80 border border-purple-700/30 rounded-xl font-bold text-lg transition-all transform hover:scale-105">
+            <Link href="/coins"
+              className="px-8 py-4 bg-gray-800/80 hover:bg-gray-700/80 border border-purple-700/30 rounded-xl font-bold text-lg transition-all transform hover:scale-105">
               ⛓️ Coins
             </Link>
           </div>
         </motion.div>
 
-        {/* Index Display */}
+        {/* Main Index Display */}
         <div className="mb-14">
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -159,19 +162,22 @@ export default function Home() {
                   <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
                   <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border border-purple-500/30"></div>
                 </div>
-                <IndexHistoryChart />
                 <p className="text-gray-400 text-sm">Fetching on-chain data...</p>
               </div>
             </div>
           ) : index ? (
-            <div className="flex flex-col items-center">
-              <IndexDisplay3D index={index.index} breakdown={index.breakdown} />
-              <AutoTweetButton indexData={index} />
+            <IndexInlineDisplay index={index} />
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              Failed to load index. Please refresh.
             </div>
-          ) : null}
+          )}
         </div>
 
-        {/* On-Chain Stats */}
+        {/* Historical Chart */}
+        <IndexHistoryChart />
+
+        {/* Live On-Chain Stats */}
         <AnimatePresence>
           {metrics && (
             <motion.section
@@ -192,7 +198,9 @@ export default function Home() {
                 <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-orange-900/20 to-purple-950/50 rounded-xl border border-orange-500/20">
                   <div className="text-3xl mb-2">⛽</div>
                   <p className="text-xs text-gray-400 mb-1">Gas Price</p>
-                  <p className="text-2xl font-bold text-orange-400">{metrics.onchain?.gas?.safe || '—'} <span className="text-sm">Gwei</span></p>
+                  <p className="text-2xl font-bold text-orange-400">
+                    {metrics.onchain?.gas?.safe || '—'} <span className="text-sm">Gwei</span>
+                  </p>
                   <p className={`text-xs mt-1 ${metrics.onchain?.gas?.congestion === 'LOW' ? 'text-green-400' : metrics.onchain?.gas?.congestion === 'HIGH' ? 'text-red-400' : 'text-yellow-400'}`}>
                     {metrics.onchain?.gas?.congestion || 'UNKNOWN'}
                   </p>
@@ -201,7 +209,9 @@ export default function Home() {
                 <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-purple-900/20 to-purple-950/50 rounded-xl border border-purple-500/20">
                   <div className="text-3xl mb-2">🐋</div>
                   <p className="text-xs text-gray-400 mb-1">Whale Activity</p>
-                  <p className="text-2xl font-bold text-purple-400">{metrics.onchain?.whales?.recentTransfers || 0}</p>
+                  <p className="text-2xl font-bold text-purple-400">
+                    {metrics.onchain?.whales?.recentTransfers || 0}
+                  </p>
                   <p className={`text-xs mt-1 ${metrics.onchain?.whales?.signal === 'ACCUMULATION' ? 'text-green-400' : metrics.onchain?.whales?.signal === 'DISTRIBUTION' ? 'text-red-400' : 'text-gray-400'}`}>
                     {metrics.onchain?.whales?.signal || 'NEUTRAL'}
                   </p>
@@ -210,25 +220,37 @@ export default function Home() {
                 <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-blue-900/20 to-purple-950/50 rounded-xl border border-blue-500/20">
                   <div className="text-3xl mb-2">🔗</div>
                   <p className="text-xs text-gray-400 mb-1">Network Load</p>
-                  <p className="text-2xl font-bold text-blue-400">{metrics.onchain?.network?.utilization || 0}%</p>
-                  <p className="text-xs text-gray-400 mt-1">Block #{(metrics.onchain?.network?.blockNumber || 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-400">
+                    {metrics.onchain?.network?.utilization || 0}%
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Block #{(metrics.onchain?.network?.blockNumber || 0).toLocaleString()}
+                  </p>
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-fuchsia-900/20 to-purple-950/50 rounded-xl border border-fuchsia-500/20">
                   <div className="text-3xl mb-2">🎯</div>
                   <p className="text-xs text-gray-400 mb-1">Alpha Score</p>
                   <p className="text-2xl font-bold text-fuchsia-400">{metrics.alphaScore || 50}</p>
-                  <p className={`text-xs mt-1 font-bold ${getSignalColor(metrics.signal)}`}>{metrics.signal || 'HOLD'}</p>
+                  <p className={`text-xs mt-1 font-bold ${getSignalColor(metrics.signal)}`}>
+                    {metrics.signal || 'HOLD'}
+                  </p>
                 </motion.div>
               </div>
 
-              {/* Macro */}
+              {/* Macro Stats */}
               {metrics.macro && (
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
                     { label: 'Fear & Greed', value: metrics.macro.fng?.value || '—', sub: metrics.macro.fng?.classification, icon: metrics.macro.fng?.emoji || '😐' },
                     { label: 'BTC Dominance', value: `${metrics.macro.btcDom?.percentage || '—'}%`, sub: metrics.macro.btcDom?.trend, icon: '₿' },
-                    { label: 'Total Market Cap', value: metrics.macro.mcap?.formatted || '—', sub: `${metrics.macro.mcap?.change24h || '0'}% (24h)`, icon: '💰', subColor: parseFloat(metrics.macro.mcap?.change24h || 0) > 0 ? 'text-green-400' : 'text-red-400' },
+                    {
+                      label: 'Total Market Cap',
+                      value: metrics.macro.mcap?.formatted || '—',
+                      sub: `${metrics.macro.mcap?.change24h || '0'}% (24h)`,
+                      icon: '💰',
+                      subColor: parseFloat(metrics.macro.mcap?.change24h || 0) > 0 ? 'text-green-400' : 'text-red-400'
+                    },
                   ].map((stat) => (
                     <motion.div key={stat.label} whileHover={{ scale: 1.02 }} className="p-5 bg-purple-950/30 rounded-xl border border-purple-800/30">
                       <div className="flex items-center justify-between">
@@ -249,11 +271,16 @@ export default function Home() {
 
         {/* Top On-Chain Coins */}
         {coins.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-14">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-14"
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">🔥 Top On-Chain Coins</h2>
               <Link href="/coins" className="text-sm text-purple-400 hover:text-purple-300 font-semibold transition-colors">
-                View all 20 → 
+                View all 20 →
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -267,7 +294,12 @@ export default function Home() {
                     className="p-4 bg-purple-950/30 rounded-xl border border-purple-800/30 hover:border-purple-500/50 cursor-pointer transition-all"
                   >
                     <div className="flex items-center gap-2 mb-3">
-                      <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" onError={(e) => { e.target.style.display = 'none'; }} />
+                      <img
+                        src={coin.image}
+                        alt={coin.name}
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm">{coin.symbol}</p>
                         <p className="text-xs text-gray-500 truncate">{coin.name}</p>
@@ -275,7 +307,10 @@ export default function Home() {
                     </div>
                     <p className="text-2xl font-bold text-center mb-1">{coin.sentiment}</p>
                     <div className="w-full bg-gray-800 rounded-full h-1 mb-2">
-                      <div className={`h-1 rounded-full ${coin.sentiment >= 60 ? 'bg-green-500' : coin.sentiment >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${coin.sentiment}%` }} />
+                      <div
+                        className={`h-1 rounded-full ${coin.sentiment >= 60 ? 'bg-green-500' : coin.sentiment >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${coin.sentiment}%` }}
+                      />
                     </div>
                     <p className={`text-xs text-center ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}%
@@ -288,12 +323,15 @@ export default function Home() {
         )}
 
         {/* $PIPE Whitelist CTA */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mb-14">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mb-14"
+        >
           <div className="relative overflow-hidden p-8 md:p-12 bg-gradient-to-br from-purple-900/40 via-violet-900/30 to-fuchsia-900/30 rounded-2xl border border-purple-700/40">
-            {/* Decorative orbs */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-
             <div className="relative z-10 text-center">
               <div className="text-6xl mb-4">🎯</div>
               <h3 className="text-3xl md:text-4xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
@@ -317,7 +355,12 @@ export default function Home() {
         </motion.section>
 
         {/* What is Pepeline */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-14">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-14"
+        >
           <div className="bg-purple-950/20 rounded-2xl p-8 border border-purple-800/30">
             <h2 className="text-3xl font-bold mb-4">What is Pepeline?</h2>
             <p className="text-gray-300 mb-6">
@@ -342,7 +385,12 @@ export default function Home() {
         </motion.section>
 
         {/* Telegram CTA */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mb-14">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-14"
+        >
           <div className="p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-700/30 text-center">
             <div className="text-6xl mb-4">🤖</div>
             <h3 className="text-3xl font-bold mb-3">Never Miss a Market Move</h3>
@@ -362,16 +410,33 @@ export default function Home() {
           </div>
         </motion.section>
 
-        {/* Market Brief + Roadmap + SEO */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mb-14">
+        {/* Market Brief */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-14"
+        >
           <MarketBrief />
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mb-14">
+        {/* Roadmap */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="mb-14"
+        >
           <Roadmap />
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mb-14">
+        {/* SEO */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-14"
+        >
           <SEOContent />
         </motion.section>
 
