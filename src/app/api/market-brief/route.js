@@ -8,8 +8,9 @@ export async function GET() {
             'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&sparkline=false&price_change_percentage=24h,7d',
             { next: { revalidate: 21600 } }
         );
-        if (!response.ok) throw new Error('Failed');
+        if (!response.ok) throw new Error(`CoinGecko ${response.status}`);
         const coins = await response.json();
+       if (!Array.isArray(coins)) throw new Error('Invalid response from CoinGecko');
 
         // Calcola stats globali
         const gainers = coins
