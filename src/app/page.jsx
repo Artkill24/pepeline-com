@@ -22,23 +22,40 @@ export default function Home() {
 
   useEffect(() => {
     fetchAll();
+    // Force loading off after 8 seconds no matter what
+    const timeout = setTimeout(() => setLoading(false), 8000);
     const interval = setInterval(fetchAll, 30000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
   }, []);
+
+  const fetchWithTimeout = (url, ms = 6000) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { signal: controller.signal })
+      .finally(() => clearTimeout(timer));
+  };
 
   const fetchAll = async () => {
     try {
-      const [indexRes, metricsRes, coinsRes] = await Promise.all([
-        fetch('/api/index'),
-        fetch('/api/advanced-metrics'),
-        fetch('/api/all-coins'),
+      const [indexRes, metricsRes, coinsRes] = await Promise.allSettled([
+        fetchWithTimeout('/api/index', 6000),
+        fetchWithTimeout('/api/advanced-metrics', 6000),
+        fetchWithTimeout('/api/all-coins', 6000),
       ]);
-      const indexData = await indexRes.json();
-      const metricsData = await metricsRes.json();
-      const coinsData = await coinsRes.json();
-      setIndex(indexData);
-      setMetrics(metricsData);
-      setCoins(coinsData.coins?.slice(0, 8) || []);
+
+      if (indexRes.status === 'fulfilled') {
+        const indexData = await indexRes.value.json();
+        setIndex(indexData);
+      }
+      if (metricsRes.status === 'fulfilled') {
+        const metricsData = await metricsRes.value.json();
+        setMetrics(metricsData);
+      }
+      if (coinsRes.status === 'fulfilled') {
+        const coinsData = await coinsRes.value.json();
+        setCoins(coinsData.coins?.slice(0, 8) || []);
+      }
+
       setLastUpdate(new Date());
     } catch (err) {
       console.error('Fetch error:', err);
