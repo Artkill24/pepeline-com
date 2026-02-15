@@ -35,7 +35,7 @@ export default function MarketBrief() {
             >
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-6">
-                    <span className="text-4xl">{brief.mood.emoji}</span>
+                    <span className="text-4xl">{brief?.mood?.emoji}</span>
                     <div>
                         <h2 className="text-3xl font-bold">Market Brief</h2>
                         <p className="text-gray-400 text-sm">AI-powered daily summary</p>
@@ -44,21 +44,21 @@ export default function MarketBrief() {
 
                 {/* Mood Banner */}
                 <div className={`p-4 rounded-xl border mb-6 ${
-                    brief.mood.label === 'Bullish' || brief.mood.label === 'Cautiously Bullish'
+                    brief?.mood?.label === 'Bullish' || brief?.mood?.label === 'Cautiously Bullish'
                         ? 'bg-green-900/20 border-green-500/30'
-                        : brief.mood.label === 'Neutral'
+                        : brief?.mood?.label === 'Neutral'
                         ? 'bg-yellow-900/20 border-yellow-500/30'
                         : 'bg-red-900/20 border-red-500/30'
                 }`}>
                     <div className="flex items-center justify-between mb-2">
-                        <p className="text-xl font-bold">{brief.mood.emoji} {brief.mood.label}</p>
+                        <p className="text-xl font-bold">{brief?.mood?.emoji} {brief?.mood?.label}</p>
                         <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                             brief.stats.avgChange24h >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                         }`}>
                             {brief.stats.avgChange24h >= 0 ? '+' : ''}{brief.stats.avgChange24h}% avg
                         </span>
                     </div>
-                    <p className="text-gray-300 text-sm">{brief.mood.description}</p>
+                    <p className="text-gray-300 text-sm">{brief?.mood?.description}</p>
                 </div>
 
                 {/* Stats Row */}
