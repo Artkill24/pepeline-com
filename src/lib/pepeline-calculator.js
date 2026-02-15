@@ -2,28 +2,32 @@
 
 import { getGasPrices, getWhaleMovements, getNetworkHealth } from './onchain-analyzer.js';
 
+// Fetch real sentiment from Fear & Greed Index (alternative.me) — free, no rate limit
 async function fetchSentiment() {
     try {
         const response = await fetch('https://api.alternative.me/fng/?limit=1', {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store',
-            signal: AbortSignal.timeout(15000)
+            signal: AbortSignal.timeout(8000)
         });
         if (!response.ok) throw new Error('FNG unavailable');
         const data = await response.json();
         const value = parseInt(data.data[0].value, 10);
         console.log(`  ✓ Sentiment: ${value} (${data.data[0].value_classification})`);
-        return value;
+        return value; // already 0-100
     } catch (error) {
         console.error(`  ✗ Sentiment failed: ${error.message}`);
         return 30;
     }
 }
 
+// Volatility via ETH gas price — Alchemy (alta gas = mercato attivo/volatile)
 async function fetchVolatility() {
     try {
         const gas = await getGasPrices();
         const gwei = gas.safe || 0;
+
+        // Convert raw gwei to volatility score 0-100
         let volatility;
         if (gwei > 100)      volatility = 95;
         else if (gwei > 60)  volatility = 80;
@@ -31,6 +35,7 @@ async function fetchVolatility() {
         else if (gwei > 15)  volatility = 45;
         else if (gwei > 5)   volatility = 25;
         else                 volatility = 10;
+
         console.log(`  ✓ Volatility: ${volatility} (gas: ${gwei} gwei, ${gas.congestion})`);
         return volatility;
     } catch (error) {
@@ -39,11 +44,15 @@ async function fetchVolatility() {
     }
 }
 
+// FOMO via whale movements — Alchemy (balene che comprano = FOMO alto)
 async function fetchFOMO() {
     try {
         const whales = await getWhaleMovements();
+
+        // whaleScore: 100 = tutto accumulation (acquisto), 0 = tutto distribution (vendita)
         const fomoScore = whales.whaleScore;
-        console.log(`  ✓ FOMO: ${fomoScore} (whale signal: ${whales.signal})`);
+
+        console.log(`  ✓ FOMO: ${fomoScore} (whale signal: ${whales.signal}, transfers: ${whales.recentTransfers})`);
         return fomoScore;
     } catch (error) {
         console.error(`  ✗ FOMO failed: ${error.message}`);
@@ -51,12 +60,18 @@ async function fetchFOMO() {
     }
 }
 
+// Meme intensity via network utilization — Alchemy (più txs = più attività = meme season)
 async function fetchMemeIntensity() {
     try {
         const network = await getNetworkHealth();
         const utilization = network.utilization || 0;
+
+        // High block utilization = everyone trading = meme coins pumping
+        // Map utilization (0-100) to meme intensity
+        // 0% util → 20 (dead), 50% → 50 (normal), 100% → 90 (crazy)
         const memeIntensity = Math.max(10, Math.min(90, 20 + (utilization * 0.7)));
-        console.log(`  ✓ Meme: ${memeIntensity.toFixed(0)} (block utilization: ${utilization}%)`);
+
+        console.log(`  ✓ Meme: ${memeIntensity.toFixed(0)} (block utilization: ${utilization}%, txs: ${network.txCount})`);
         return parseFloat(memeIntensity.toFixed(2));
     } catch (error) {
         console.error(`  ✗ Meme failed: ${error.message}`);
@@ -82,17 +97,27 @@ function getEmoji(index) {
 
 export async function calculatePepelineIndex() {
     console.log('🐸 Calculating Pepeline Index...');
+
     try {
         console.log('  → Fetching sentiment (Fear & Greed)...');
         const sentimentScore = await fetchSentiment();
+
         console.log('  → Fetching volatility (Alchemy gas)...');
         const volatilityScore = await fetchVolatility();
+
         console.log('  → Fetching FOMO (Alchemy whales)...');
         const fomoScore = await fetchFOMO();
+
         console.log('  → Fetching meme intensity (Alchemy network)...');
         const memeScore = await fetchMemeIntensity();
 
-        const index = (sentimentScore * 0.25 + volatilityScore * 0.25 + fomoScore * 0.30 + memeScore * 0.20);
+        const index = (
+            sentimentScore * 0.25 +
+            volatilityScore * 0.25 +
+            fomoScore * 0.30 +
+            memeScore * 0.20
+        );
+
         const level = getLevel(index);
         const emoji = getEmoji(index);
 
@@ -100,7 +125,8 @@ export async function calculatePepelineIndex() {
 
         return {
             index: parseFloat(index.toFixed(2)),
-            level, emoji,
+            level,
+            emoji,
             breakdown: {
                 sentiment: parseFloat(sentimentScore.toFixed(2)),
                 volatility: parseFloat(volatilityScore.toFixed(2)),
@@ -115,8 +141,15 @@ export async function calculatePepelineIndex() {
                 timestamp: new Date().toISOString()
             }
         };
+
     } catch (error) {
         console.error('❌ Index calculation error:', error);
-        return { index: 50, level: 'NEUTRAL', emoji: '😐', breakdown: { sentiment: 50, volatility: 50, fomo: 50, meme: 50 }, error: error.message };
+        return {
+            index: 50,
+            level: 'NEUTRAL',
+            emoji: '😐',
+            breakdown: { sentiment: 50, volatility: 50, fomo: 50, meme: 50 },
+            error: error.message
+        };
     }
 }

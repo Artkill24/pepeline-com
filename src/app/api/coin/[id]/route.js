@@ -53,31 +53,19 @@ async function fetchAlchemyPrice(token) {
     } catch { return 0; }
 }
 
-// Binance symbol map for 24h change (no API key needed)
-const BINANCE_SYMBOL_MAP = {
-    'ethereum': 'ETHUSDT', 'wrapped-bitcoin': 'BTCUSDT', 'chainlink': 'LINKUSDT',
-    'uniswap': 'UNIUSDT', 'aave': 'AAVEUSDT', 'maker': 'MKRUSDT',
-    'compound-governance-token': 'COMPUSDT', 'shiba-inu': 'SHIBUSDT', 'pepe': 'PEPEUSDT',
-    'lido-dao': 'LDOUSDT', 'the-graph': 'GRTUSDT', 'decentraland': 'MANAUSDT',
-    'the-sandbox': 'SANDUSDT', 'curve-dao-token': 'CRVUSDT', 'convex-finance': 'CVXUSDT',
-    'balancer': 'BALUSDT', 'ethereum-name-service': 'ENSUSDT',
-};
-
 async function fetchChange24h(coinId) {
     try {
-        const binanceSymbol = BINANCE_SYMBOL_MAP[coinId];
-        // Stablecoins: return 0 change
-        if (!binanceSymbol) return { change24h: 0, marketCap: 0, volume24h: 0 };
         const res = await fetch(
-            `https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`,
-            { cache: 'no-store', signal: AbortSignal.timeout(6000) }
+            `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`,
+            { cache: 'no-store', signal: AbortSignal.timeout(10000) }
         );
         if (!res.ok) return { change24h: 0, marketCap: 0, volume24h: 0 };
-        const d = await res.json();
+        const data = await res.json();
+        const d = data[coinId];
         return {
-            change24h: parseFloat(d.priceChangePercent || 0),
-            marketCap: 0, // Binance doesn't provide mcap, not critical for detail page
-            volume24h: parseFloat(d.quoteVolume || 0),
+            change24h: parseFloat(d?.usd_24h_change || 0),
+            marketCap: parseFloat(d?.usd_market_cap || 0),
+            volume24h: parseFloat(d?.usd_24h_vol || 0),
         };
     } catch { return { change24h: 0, marketCap: 0, volume24h: 0 }; }
 }

@@ -77,7 +77,7 @@ export default function MarketBrief() {
                     </div>
                     <div className="p-3 bg-gray-800/60 rounded-lg border border-gray-700 text-center">
                         <p className="text-xs text-gray-500 mb-1">BTC Dom</p>
-                        <p className="text-lg font-bold">{brief?.stats?.btcDom ?? "—"}%</p>
+                        <p className="text-lg font-bold">{brief.stats.btcDom ?? '—'}%</p>
                     </div>
                 </div>
 
