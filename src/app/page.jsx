@@ -12,6 +12,7 @@ import Roadmap from '@/components/Roadmap';
 import Footer from '@/components/Footer';
 import SEOContent from '@/components/SEOContent';
 import AutoTweetButton from '@/components/AutoTweetButton';
+import NFTTrendingSection from '@/components/NFTTrendingSection';
 
 export default function Home() {
   const [index, setIndex] = useState(null);
@@ -338,6 +339,15 @@ export default function Home() {
             </div>
           </motion.section>
         )}
+
+        {/* NFT Hype Index */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32 }}
+        >
+          <NFTTrendingSection compact={true} />
+        </motion.section>
 
         {/* $PIPE Whitelist CTA */}
         <motion.section

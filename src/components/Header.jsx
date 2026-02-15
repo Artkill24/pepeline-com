@@ -13,6 +13,7 @@ export default function Header() {
                 <Link href="/coins" className="text-gray-300 hover:text-white transition-colors">
                     💰 Coins
                 </Link>
+                <Link href="/nft" className="text-gray-300 hover:text-white transition-colors">NFT</Link>
                 <Link href="/heatmap" className="text-gray-300 hover:text-white transition-colors">
                   🗺️ Heatmap
                 </Link>
