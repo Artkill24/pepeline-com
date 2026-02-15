@@ -7,7 +7,7 @@ async function fetchSentiment() {
         const response = await fetch('https://api.alternative.me/fng/?limit=1', {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store',
-            signal: AbortSignal.timeout(8000)
+            signal: AbortSignal.timeout(15000)
         });
         if (!response.ok) throw new Error('FNG unavailable');
         const data = await response.json();

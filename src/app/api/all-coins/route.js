@@ -26,21 +26,44 @@ const TOKEN_LIST = [
     { id: 'balancer',        symbol: 'BAL',  name: 'Balancer',              address: '0xba100000625a3754423978a60c9317c58a424e3d', image: 'https://assets.coingecko.com/coins/images/11683/thumb/Balancer.png' },
 ];
 
-// Fetch 24h price changes from CoinGecko simple/price (lightweight endpoint)
-async function fetchCoinGeckoChanges() {
+// Map token IDs to Binance symbols for 24h change data
+const BINANCE_CHANGE_MAP = {
+    'ethereum': 'ETHUSDT', 'wrapped-bitcoin': 'WBTCUSDT', 'chainlink': 'LINKUSDT',
+    'uniswap': 'UNIUSDT', 'aave': 'AAVEUSDT', 'maker': 'MKRUSDT',
+    'compound-governance-token': 'COMPUSDT', 'shiba-inu': 'SHIBUSDT', 'pepe': 'PEPEUSDT',
+    'lido-dao': 'LDOUSDT', 'the-graph': 'GRTUSDT', 'decentraland': 'MANAUSDT',
+    'the-sandbox': 'SANDUSDT', 'curve-dao-token': 'CRVUSDT', 'convex-finance': 'CVXUSDT',
+    'balancer': 'BALUSDT', 'ethereum-name-service': 'ENSUSDT',
+    // Stablecoins intentionally omitted (0 change expected)
+};
+
+// Fetch 24h price changes from Binance (no API key, generous rate limits)
+async function fetchBinanceChanges() {
     try {
-        const ids = TOKEN_LIST.map(t => t.id).join(',');
+        const binanceSymbols = Object.values(BINANCE_CHANGE_MAP);
+        const symbols = JSON.stringify(binanceSymbols);
         const res = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-            { cache: 'no-store' }
+            `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`,
+            { cache: 'no-store', signal: AbortSignal.timeout(8000) }
         );
         if (!res.ok) return {};
         const data = await res.json();
-        if (!data || typeof data !== 'object') return {};
+        if (!Array.isArray(data)) return {};
 
+        // Build reverse map: binanceSymbol → change
+        const binanceToChange = {};
+        for (const t of data) {
+            binanceToChange[t.symbol] = parseFloat(t.priceChangePercent || 0);
+        }
+
+        // Convert to coinGecko ID → change map
         const changeMap = {};
-        for (const [id, vals] of Object.entries(data)) {
-            changeMap[id] = parseFloat(vals?.usd_24h_change || 0);
+        for (const [id, binanceSym] of Object.entries(BINANCE_CHANGE_MAP)) {
+            changeMap[id] = binanceToChange[binanceSym] ?? 0;
+        }
+        // Stablecoins default to 0
+        for (const token of TOKEN_LIST) {
+            if (!(token.id in changeMap)) changeMap[token.id] = 0;
         }
         return changeMap;
     } catch {
@@ -151,7 +174,7 @@ export async function GET() {
         // Fetch prices, 24h changes, and ETH price in parallel
         const [priceMap, changeMap, ethPrice] = await Promise.all([
             fetchAlchemyPrices(addresses),
-            fetchCoinGeckoChanges(),
+            fetchBinanceChanges(),
             fetchEthPrice()
         ]);
 

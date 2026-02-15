@@ -11,21 +11,41 @@ export async function POST(request) {
             return Response.json({ error: 'No coins provided' }, { status: 400 });
         }
 
-        // Fetch data per ogni coin
+        const BINANCE_MAP = {
+            'ethereum': { binance: 'ETHUSDT', name: 'Ethereum', symbol: 'ETH', image: 'https://assets.coingecko.com/coins/images/279/thumb/ethereum.png' },
+            'bitcoin': { binance: 'BTCUSDT', name: 'Bitcoin', symbol: 'BTC', image: 'https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png' },
+            'wrapped-bitcoin': { binance: 'WBTCUSDT', name: 'Wrapped Bitcoin', symbol: 'WBTC', image: 'https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png' },
+            'chainlink': { binance: 'LINKUSDT', name: 'Chainlink', symbol: 'LINK', image: 'https://assets.coingecko.com/coins/images/877/thumb/chainlink-new-logo.png' },
+            'uniswap': { binance: 'UNIUSDT', name: 'Uniswap', symbol: 'UNI', image: 'https://assets.coingecko.com/coins/images/12504/thumb/uniswap-uni.png' },
+            'aave': { binance: 'AAVEUSDT', name: 'Aave', symbol: 'AAVE', image: 'https://assets.coingecko.com/coins/images/12645/thumb/AAVE.png' },
+            'maker': { binance: 'MKRUSDT', name: 'Maker', symbol: 'MKR', image: 'https://assets.coingecko.com/coins/images/1364/thumb/Mark_Maker.png' },
+            'shiba-inu': { binance: 'SHIBUSDT', name: 'Shiba Inu', symbol: 'SHIB', image: 'https://assets.coingecko.com/coins/images/11939/thumb/shiba.png' },
+            'pepe': { binance: 'PEPEUSDT', name: 'Pepe', symbol: 'PEPE', image: 'https://assets.coingecko.com/coins/images/29850/thumb/pepe-token.jpeg' },
+            'lido-dao': { binance: 'LDOUSDT', name: 'Lido DAO', symbol: 'LDO', image: 'https://assets.coingecko.com/coins/images/13573/thumb/Lido_DAO.png' },
+            'the-graph': { binance: 'GRTUSDT', name: 'The Graph', symbol: 'GRT', image: 'https://assets.coingecko.com/coins/images/13397/thumb/Graph_Token.png' },
+            'curve-dao-token': { binance: 'CRVUSDT', name: 'Curve DAO', symbol: 'CRV', image: 'https://assets.coingecko.com/coins/images/12124/thumb/Curve.png' },
+            'solana': { binance: 'SOLUSDT', name: 'Solana', symbol: 'SOL', image: 'https://assets.coingecko.com/coins/images/4128/thumb/solana.png' },
+        };
+
+        // Fetch data per ogni coin via Binance (no API key, no rate limits)
         const coinResults = await Promise.all(
             coins.map(async (item) => {
                 try {
+                    const meta = BINANCE_MAP[item.id];
+                    if (!meta) return null;
+
                     const res = await fetch(
-                        `https://api.coingecko.com/api/v3/coins/${item.id}?localization=false&tickers=false`
+                        `https://api.binance.com/api/v3/ticker/24hr?symbol=${meta.binance}`,
+                        { cache: 'no-store', signal: AbortSignal.timeout(6000) }
                     );
                     if (!res.ok) return null;
-                    const data = await res.json();
+                    const d = await res.json();
 
-                    const price = data.market_data?.current_price?.usd || 0;
-                    const change24h = data.market_data?.price_change_percentage_24h || 0;
-                    const change7d = data.market_data?.price_change_percentage_7d || 0;
-                    const marketCap = data.market_data?.market_cap?.usd || 0;
-                    const volume = data.market_data?.total_volume?.usd || 0;
+                    const price = parseFloat(d.lastPrice || 0);
+                    const change24h = parseFloat(d.priceChangePercent || 0);
+                    const change7d = 0;
+                    const marketCap = 0;
+                    const volume = parseFloat(d.quoteVolume || 0);
 
                     // Sentiment
                     let score = 50 + Math.min(Math.max(change24h * 2, -30), 30) + (Math.random() - 0.5) * 10;
@@ -43,10 +63,10 @@ export async function POST(request) {
                     const totalValue = price * item.amount;
 
                     return {
-                        id: data.id,
-                        symbol: data.symbol?.toUpperCase(),
-                        name: data.name,
-                        image: data.image?.thumb,
+                        id: item.id,
+                        symbol: meta.symbol,
+                        name: meta.name,
+                        image: meta.image,
                         price,
                         amount: item.amount,
                         totalValue,
