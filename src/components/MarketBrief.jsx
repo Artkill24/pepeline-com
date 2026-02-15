@@ -85,7 +85,7 @@ export default function MarketBrief() {
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-green-900/10 rounded-xl border border-green-500/20">
                         <p className="text-green-400 font-semibold mb-3">🚀 Top Gainers</p>
-                        {brief.topGainers.map(coin => (
+                        {(brief?.topGainers || []).map(coin => (
                             <Link key={coin.id} href={`/coin/${coin.id}`}>
                                 <div className="flex items-center justify-between py-2 hover:bg-green-900/20 px-2 rounded transition">
                                     <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function MarketBrief() {
 
                     <div className="p-4 bg-red-900/10 rounded-xl border border-red-500/20">
                         <p className="text-red-400 font-semibold mb-3">📉 Top Losers</p>
-                        {brief.topLosers.map(coin => (
+                        {(brief?.topLosers || []).map(coin => (
                             <Link key={coin.id} href={`/coin/${coin.id}`}>
                                 <div className="flex items-center justify-between py-2 hover:bg-red-900/20 px-2 rounded transition">
                                     <div className="flex items-center gap-2">
