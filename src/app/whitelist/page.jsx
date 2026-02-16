@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
@@ -32,10 +34,10 @@ const getProgress = (pts) => {
     return Math.min(100, Math.round(((pts - base) / (next.min - base)) * 100));
 };
 
-// ─── Leaderboard row ────────────────────────────────────────────────
+// ─── Leaderboard row ────────────────────────────────────────────────────────
 function LeaderboardRow({ user, index, currentWallet }) {
     const tier   = getTier(user.points);
-    const medals = ['🥇','🥈','🥉'];
+    const medals = ['🥇', '🥈', '🥉'];
     const isSelf = user.wallet_address === currentWallet;
     return (
         <div className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${
@@ -46,7 +48,7 @@ function LeaderboardRow({ user, index, currentWallet }) {
                     {index < 3 ? medals[index] : index + 1}
                 </span>
                 <span className="font-mono text-xs text-gray-300 truncate">
-                    {user.wallet_address.slice(0,6)}…{user.wallet_address.slice(-4)}
+                    {user.wallet_address.slice(0, 6)}…{user.wallet_address.slice(-4)}
                 </span>
                 {isSelf && <span className="text-xs text-green-400 shrink-0">(you)</span>}
             </div>
@@ -62,7 +64,7 @@ function LeaderboardRow({ user, index, currentWallet }) {
     );
 }
 
-// ─── Action row ─────────────────────────────────────────────────────
+// ─── Action row ─────────────────────────────────────────────────────────────
 function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getReferralLink, claimedToday }) {
     const isDone = claimedToday?.includes(action.id);
     const base   = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-40';
@@ -72,21 +74,21 @@ function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getRefer
         btn = <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700 text-gray-400">✓ Done</span>;
     } else if (action.id === 'telegram_bot') {
         btn = <a href="https://t.me/Pepelinebot" target="_blank" rel="noopener noreferrer"
-            onClick={() => claimPoints(wallet,'telegram_bot')}
+            onClick={() => claimPoints(wallet, 'telegram_bot')}
             className={`${base} bg-blue-600 hover:bg-blue-500`}>Open Bot</a>;
     } else if (action.id === 'use_dashboard') {
-        btn = <Link href="/dashboard" onClick={() => claimPoints(wallet,'use_dashboard')}
+        btn = <Link href="/dashboard" onClick={() => claimPoints(wallet, 'use_dashboard')}
             className={`${base} bg-purple-600 hover:bg-purple-500`}>Go</Link>;
     } else if (action.id === 'share_twitter') {
         btn = <a href="https://twitter.com/intent/tweet?text=🐸%20Real-time%20crypto%20sentiment%20→%20pepeline.com%20%23Pepeline%20%24SENT"
             target="_blank" rel="noopener noreferrer"
-            onClick={() => claimPoints(wallet,'share_twitter')}
+            onClick={() => claimPoints(wallet, 'share_twitter')}
             className={`${base} bg-gray-600 hover:bg-gray-500`}>Share</a>;
     } else if (action.id === 'refer_friend') {
-        btn = <button onClick={() => { navigator.clipboard.writeText(getReferralLink()); setMessage({type:'success',text:'Referral link copied! 🎉'}); }}
+        btn = <button onClick={() => { navigator.clipboard.writeText(getReferralLink()); setMessage({ type: 'success', text: 'Referral link copied! 🎉' }); }}
             className={`${base} bg-yellow-600 hover:bg-yellow-500`}>Copy Link</button>;
     } else if (action.id === 'read_brief') {
-        btn = <Link href="/#market-brief" onClick={() => claimPoints(wallet,'read_brief')}
+        btn = <Link href="/#market-brief" onClick={() => claimPoints(wallet, 'read_brief')}
             className={`${base} bg-teal-600 hover:bg-teal-500`}>Read</Link>;
     } else {
         btn = <button onClick={() => claimPoints(wallet, action.id)} disabled={claiming === action.id}
@@ -116,10 +118,12 @@ function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getRefer
     );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────
+// ─── Main Page ───────────────────────────────────────────────────────────────
 export default function WhitelistPage() {
+    const { publicKey, connected, disconnect } = useWallet();
+    const { setVisible } = useWalletModal();
+
     const [wallet,         setWallet]         = useState('');
-    const [inputWallet,    setInputWallet]    = useState('');
     const [userData,       setUserData]       = useState(null);
     const [leaderboard,    setLeaderboard]    = useState([]);
     const [stats,          setStats]          = useState({ total_users: 0, whitelisted: 0 });
@@ -130,6 +134,21 @@ export default function WhitelistPage() {
     const [referralCopied, setReferralCopied] = useState(false);
 
     const claimedToday = userData?.claimed_today || [];
+
+    // Auto-connect when wallet connects
+    useEffect(() => {
+        if (connected && publicKey) {
+            const addr = publicKey.toBase58();
+            setWallet(addr);
+            fetchUser(addr);
+            claimPoints(addr, 'daily_visit');
+            claimPoints(addr, 'connect_wallet');
+        }
+        if (!connected) {
+            setWallet('');
+            setUserData(null);
+        }
+    }, [connected, publicKey]);
 
     useEffect(() => {
         fetchLeaderboard();
@@ -156,18 +175,6 @@ export default function WhitelistPage() {
         setLoading(false);
     };
 
-    const handleConnect = () => {
-        const t = inputWallet.trim();
-        if (!t || t.length < 32 || t.length > 44) {
-            setMessage({ type: 'error', text: 'Enter a valid Solana wallet address (32–44 chars)' });
-            return;
-        }
-        setWallet(t);
-        fetchUser(t);
-        claimPoints(t, 'daily_visit');
-        claimPoints(t, 'connect_wallet');
-    };
-
     const claimPoints = async (addr, action) => {
         setClaiming(action);
         try {
@@ -191,6 +198,12 @@ export default function WhitelistPage() {
         setTimeout(() => setMessage(null), 3500);
     };
 
+    const handleDisconnect = () => {
+        disconnect();
+        setWallet('');
+        setUserData(null);
+    };
+
     const getReferralLink    = () => `https://pepeline.com/whitelist?ref=${wallet}`;
     const handleCopyReferral = () => {
         navigator.clipboard.writeText(getReferralLink());
@@ -207,6 +220,7 @@ export default function WhitelistPage() {
         <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
             <Header />
 
+            {/* Toast */}
             <AnimatePresence>
                 {message && (
                     <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -272,35 +286,50 @@ export default function WhitelistPage() {
 
                         {/* Connect wallet OR User stats */}
                         {!wallet ? (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
-                                <h2 className="text-2xl font-bold mb-1">👛 Connect Your Wallet</h2>
-                                <p className="text-gray-400 text-sm mb-5">Enter your Solana wallet address to start earning points toward $SENT</p>
-                                <div className="flex gap-3">
-                                    <input type="text" value={inputWallet} onChange={(e) => setInputWallet(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
-                                        placeholder="Solana wallet address…"
-                                        className="flex-1 px-4 py-3 bg-gray-900 rounded-xl border border-gray-600 focus:border-green-500 outline-none text-sm font-mono placeholder-gray-600" />
-                                    <button onClick={handleConnect} className="px-6 py-3 bg-green-600 hover:bg-green-500 active:scale-95 rounded-xl font-semibold transition-all">
-                                        Connect
-                                    </button>
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-8 bg-gray-800 rounded-2xl border border-gray-700 text-center">
+                                <div className="text-5xl mb-4">👻</div>
+                                <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
+                                <p className="text-gray-400 text-sm mb-6">
+                                    Connect your Solana wallet to start earning points toward{' '}
+                                    <span className="text-green-400 font-bold">$SENT</span>
+                                </p>
+                                <button
+                                    onClick={() => setVisible(true)}
+                                    className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 rounded-xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-green-900/30"
+                                >
+                                    <span className="text-xl">👛</span> Connect Phantom / Solflare
+                                </button>
+
+                                {/* Supported wallets */}
+                                <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
+                                    <span>Supports:</span>
+                                    <span className="flex items-center gap-1">👻 Phantom</span>
+                                    <span>·</span>
+                                    <span className="flex items-center gap-1">🔥 Solflare</span>
                                 </div>
+
                                 {referralCode && (
-                                    <p className="text-xs text-green-400 mt-3">
-                                        🎉 Referred by <span className="font-mono">{referralCode.slice(0,8)}…</span> — your referrer earns +25 pts!
+                                    <p className="text-xs text-green-400 mt-4">
+                                        🎉 Referred by <span className="font-mono">{referralCode.slice(0, 8)}…</span> — your referrer earns +25 pts!
                                     </p>
                                 )}
                             </motion.div>
                         ) : (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            /* User stats card */
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
                                 <div className="flex items-center justify-between mb-5">
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Connected</p>
-                                        <p className="font-mono text-sm text-gray-200">{wallet.slice(0,8)}…{wallet.slice(-6)}</p>
+                                        <p className="font-mono text-sm text-gray-200">{wallet.slice(0, 8)}…{wallet.slice(-6)}</p>
                                     </div>
-                                    {currentTier
-                                        ? <span className={`px-3 py-1.5 rounded-full text-sm font-bold border ${currentTier.bg} ${currentTier.color}`}>{currentTier.icon} {currentTier.label}</span>
-                                        : <span className="px-3 py-1.5 rounded-full text-sm font-bold border bg-gray-700/50 border-gray-600 text-gray-400">No tier yet</span>
-                                    }
+                                    <div className="flex items-center gap-2">
+                                        {currentTier
+                                            ? <span className={`px-3 py-1.5 rounded-full text-sm font-bold border ${currentTier.bg} ${currentTier.color}`}>{currentTier.icon} {currentTier.label}</span>
+                                            : <span className="px-3 py-1.5 rounded-full text-sm font-bold border bg-gray-700/50 border-gray-600 text-gray-400">No tier yet</span>
+                                        }
+                                    </div>
                                 </div>
 
                                 {loading ? (
@@ -322,6 +351,8 @@ export default function WhitelistPage() {
                                             <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
                                                 className={`h-3 rounded-full bg-gradient-to-r ${currentTier?.bar || 'from-green-500 to-blue-500'}`} />
                                         </div>
+
+                                        {/* Mini stats */}
                                         <div className="grid grid-cols-3 gap-3 text-center text-sm mb-5">
                                             <div className="bg-gray-900/50 rounded-xl p-3">
                                                 <p className="text-lg font-bold text-white">#{userData.rank || '—'}</p>
@@ -336,8 +367,9 @@ export default function WhitelistPage() {
                                                 <p className="text-xs text-gray-500">Referrals</p>
                                             </div>
                                         </div>
+
                                         {/* Referral box */}
-                                        <div className="p-4 bg-yellow-900/20 border border-yellow-500/20 rounded-xl">
+                                        <div className="p-4 bg-yellow-900/20 border border-yellow-500/20 rounded-xl mb-4">
                                             <p className="text-xs text-yellow-400 font-semibold mb-2">👥 Your Referral Link — +25 pts per friend</p>
                                             <div className="flex gap-2">
                                                 <input readOnly value={getReferralLink()}
@@ -348,6 +380,12 @@ export default function WhitelistPage() {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Disconnect */}
+                                        <button onClick={handleDisconnect}
+                                            className="w-full py-2 bg-gray-700/50 hover:bg-gray-700 rounded-xl text-xs text-gray-400 hover:text-gray-300 transition-all">
+                                            Disconnect wallet
+                                        </button>
                                     </>
                                 ) : null}
                             </motion.div>
@@ -355,7 +393,8 @@ export default function WhitelistPage() {
 
                         {/* Actions */}
                         {wallet && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
                                 <div className="flex items-center justify-between mb-5">
                                     <h2 className="text-xl font-bold">🎮 Earn Points</h2>
                                     <span className="text-xs text-gray-500">Daily tasks reset at 00:00 UTC</span>
@@ -373,7 +412,8 @@ export default function WhitelistPage() {
 
                     {/* Leaderboard */}
                     <div>
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6 bg-gray-800 rounded-2xl border border-gray-700 sticky top-4">
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700 sticky top-4">
                             <div className="flex items-center justify-between mb-5">
                                 <h2 className="text-xl font-bold">🏆 Leaderboard</h2>
                                 <span className="text-xs text-gray-500">Top {Math.min(leaderboard.length, 50)}</span>
