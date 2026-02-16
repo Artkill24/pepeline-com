@@ -125,7 +125,7 @@ export default function IndexInlineDisplay({ index: indexData }) {
       </div>
 
       {/* Tweet button */}
-      <AutoTweetButton indexData={indexData} />
+      {/* <AutoTweetButton indexData={indexData} /> */}
     </div>
   );
 }
