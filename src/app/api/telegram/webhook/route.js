@@ -1,7 +1,16 @@
 export const dynamic = 'force-dynamic';
 
+import { createClient } from '@supabase/supabase-js';
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+function getAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_KEY
+    );
+}
 
 async function sendMessage(chatId, text, parseMode = 'HTML') {
     await fetch(`${TELEGRAM_API}/sendMessage`, {
@@ -59,13 +68,14 @@ I track real-time crypto market sentiment powered by AI + Alchemy on-chain data.
 
 <b>Commands:</b>
 /index — Current Pepeline Index
-/gas — Ethereum gas prices  
+/gas — Ethereum gas prices
 /whales — Whale activity
 /metrics — Full market overview
+/subscribe — Get extreme alerts 🔔
 /help — Show all commands
 
 🌐 <a href="https://pepeline.com">pepeline.com</a>
-🎯 <a href="https://pepeline.com/whitelist">Get $PIPE Whitelist</a>`;
+🎯 <a href="https://pepeline.com/whitelist">Get $SENT Whitelist</a>`;
 
     await sendMessage(chatId, text);
 }
@@ -89,10 +99,10 @@ async function handleIndex(chatId) {
 <code>[${bar}]</code>
 
 📊 <b>Breakdown:</b>
-• Fear & Greed: ${breakdown.sentiment || '—'}
-• Volatility: ${breakdown.volatility || '—'}
-• FOMO: ${typeof breakdown.fomo === 'number' ? breakdown.fomo.toFixed(1) : '—'}
-• Meme: ${typeof breakdown.meme === 'number' ? breakdown.meme.toFixed(1) : '—'}
+- Fear & Greed: ${breakdown.sentiment || '—'}
+- Volatility: ${breakdown.volatility || '—'}
+- FOMO: ${typeof breakdown.fomo === 'number' ? breakdown.fomo.toFixed(1) : '—'}
+- Meme: ${typeof breakdown.meme === 'number' ? breakdown.meme.toFixed(1) : '—'}
 
 🕐 Updated: ${new Date().toLocaleTimeString('en-US')} UTC
 🌐 <a href="https://pepeline.com">pepeline.com</a>`;
@@ -115,8 +125,8 @@ async function handleGas(chatId) {
 
 ${congestionEmoji} Network: <b>${gas.congestion || 'UNKNOWN'}</b>
 
-• Safe: <b>${gas.safe || '—'} Gwei</b>
-• Fast: <b>${gas.fast || '—'} Gwei</b>
+- Safe: <b>${gas.safe || '—'} Gwei</b>
+- Fast: <b>${gas.fast || '—'} Gwei</b>
 
 🌐 <a href="https://pepeline.com">pepeline.com</a>`;
 
@@ -165,14 +175,14 @@ async function handleMetrics(chatId) {
 🐸 <b>Pepeline Index: ${indexData?.index || '—'}/100</b> (${indexData?.level || '—'})
 
 ⛓️ <b>On-Chain:</b>
-• Gas: ${metrics?.onchain?.gas?.safe || '—'} Gwei (${metrics?.onchain?.gas?.congestion || '—'})
-• Whales: ${metrics?.onchain?.whales?.signal || '—'}
-• Network: ${metrics?.onchain?.network?.utilization || '—'}%
+- Gas: ${metrics?.onchain?.gas?.safe || '—'} Gwei (${metrics?.onchain?.gas?.congestion || '—'})
+- Whales: ${metrics?.onchain?.whales?.signal || '—'}
+- Network: ${metrics?.onchain?.network?.utilization || '—'}%
 
 📈 <b>Macro:</b>
-• Fear & Greed: ${fng?.value || '—'} (${fng?.classification || '—'})
-• BTC Dom: ${btcDom?.percentage || '—'}% — ${btcDom?.trend || '—'}
-• Market Cap: ${mcap?.formatted || '—'} (${mcap?.change24h || '0'}% 24h)
+- Fear & Greed: ${fng?.value || '—'} (${fng?.classification || '—'})
+- BTC Dom: ${btcDom?.percentage || '—'}% — ${btcDom?.trend || '—'}
+- Market Cap: ${mcap?.formatted || '—'} (${mcap?.change24h || '0'}% 24h)
 
 🎯 <b>Alpha Score: ${alphaScore || 50}/100</b>
 ${signalEmoji} Signal: <b>${signal || 'HOLD'}</b>
@@ -180,6 +190,67 @@ ${signalEmoji} Signal: <b>${signal || 'HOLD'}</b>
 🌐 <a href="https://pepeline.com">pepeline.com</a>`;
 
     await sendMessage(chatId, text);
+}
+
+async function handleSubscribe(chatId, username, firstName) {
+    const supabase = getAdmin();
+
+    try {
+        const { data, error } = await supabase
+            .from('alert_subscribers')
+            .upsert({
+                chat_id: chatId,
+                username: username || null,
+                first_name: firstName || null,
+                subscribed_at: new Date().toISOString()
+            }, { onConflict: 'chat_id' })
+            .select();
+
+        if (error) throw error;
+
+        const text = `🔔 <b>Alert Subscription Active!</b>
+
+You'll receive notifications when:
+- 😱 Index drops below 20 (Extreme Fear)
+- 🔥 Index rises above 80 (Extreme Greed)
+
+Alerts are throttled to max 1 per 6 hours to avoid spam.
+
+Use /unsubscribe to stop alerts anytime.
+
+🌐 <a href="https://pepeline.com">pepeline.com</a>`;
+
+        await sendMessage(chatId, text);
+    } catch (err) {
+        console.error('Subscribe error:', err);
+        await sendMessage(chatId, '⚠️ Could not subscribe. Please try again later.');
+    }
+}
+
+async function handleUnsubscribe(chatId) {
+    const supabase = getAdmin();
+
+    try {
+        const { error } = await supabase
+            .from('alert_subscribers')
+            .delete()
+            .eq('chat_id', chatId);
+
+        if (error) throw error;
+
+        const text = `🔕 <b>Alert Subscription Cancelled</b>
+
+You will no longer receive extreme sentiment alerts.
+
+Use /subscribe to re-enable alerts anytime.
+
+🌐 <a href="https://pepeline.com">pepeline.com</a>`;
+
+        await sendMessage(chatId, text);
+    } catch (err) {
+        console.error('Unsubscribe error:', err);
+        await sendMessage(chatId, '⚠️ Could not unsubscribe. Please try again later.');
+    }
 }
 
 async function handleHelp(chatId) {
@@ -190,13 +261,15 @@ async function handleHelp(chatId) {
 /gas — Ethereum gas prices
 /whales — Whale wallet activity
 /metrics — Full market overview
+/subscribe — Get extreme alerts 🔔
+/unsubscribe — Stop alerts 🔕
 /help — This message
 
 🌐 <b>Links:</b>
-• <a href="https://pepeline.com">Website</a>
-• <a href="https://pepeline.com/whitelist">$PIPE Whitelist</a>
-• <a href="https://pepeline.com/coins">On-Chain Coins</a>
-• <a href="https://pepeline.com/dashboard">Dashboard</a>`;
+- <a href="https://pepeline.com">Website</a>
+- <a href="https://pepeline.com/whitelist">$SENT Whitelist</a>
+- <a href="https://pepeline.com/backtest">Backtest</a>
+- <a href="https://pepeline.com/dashboard">Dashboard</a>`;
 
     await sendMessage(chatId, text);
 }
@@ -213,6 +286,8 @@ export async function POST(request) {
         const chatId = message.chat?.id;
         const text = message.text?.trim() || '';
         const command = text.split(' ')[0].toLowerCase();
+        const username = message.from?.username;
+        const firstName = message.from?.first_name;
 
         if (!chatId) return Response.json({ ok: true });
 
@@ -232,11 +307,16 @@ export async function POST(request) {
             case '/metrics':
                 await handleMetrics(chatId);
                 break;
+            case '/subscribe':
+                await handleSubscribe(chatId, username, firstName);
+                break;
+            case '/unsubscribe':
+                await handleUnsubscribe(chatId);
+                break;
             case '/help':
                 await handleHelp(chatId);
                 break;
             default:
-                // Unknown command - send help
                 await sendMessage(chatId, '❓ Unknown command. Use /help to see all commands.');
         }
 
@@ -252,6 +332,6 @@ export async function GET() {
     return Response.json({
         status: 'Telegram webhook active',
         bot: '@Pepelinebot',
-        commands: ['/start', '/index', '/gas', '/whales', '/metrics', '/help']
+        commands: ['/start', '/index', '/gas', '/whales', '/metrics', '/subscribe', '/unsubscribe', '/help']
     });
 }

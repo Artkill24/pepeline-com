@@ -1,30 +1,31 @@
 export default function sitemap() {
     const baseUrl = 'https://pepeline.com';
-    
+    const currentDate = new Date().toISOString();
+
     return [
         {
             url: baseUrl,
-            lastModified: new Date(),
+            lastModified: currentDate,
             changeFrequency: 'hourly',
-            priority: 1,
+            priority: 1.0,
         },
         {
-            url: `${baseUrl}/coins`,
-            lastModified: new Date(),
+            url: `${baseUrl}/dashboard`,
+            lastModified: currentDate,
             changeFrequency: 'hourly',
-            priority: 0.8,
+            priority: 0.9,
         },
         {
-            url: `${baseUrl}/portfolio`,
-            lastModified: new Date(),
+            url: `${baseUrl}/whitelist`,
+            lastModified: currentDate,
             changeFrequency: 'daily',
             priority: 0.8,
         },
         {
-            url: `${baseUrl}/dashboard`,
-            lastModified: new Date(),
-            changeFrequency: 'hourly',
-            priority: 0.9,
+            url: `${baseUrl}/backtest`,
+            lastModified: currentDate,
+            changeFrequency: 'daily',
+            priority: 0.7,
         },
     ];
 }
