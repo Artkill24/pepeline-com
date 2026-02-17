@@ -9,6 +9,7 @@ const links = [
     { href: '/dashboard', label: '🎯 Dashboard' },
     { href: '/heatmap',   label: '🗺️ Heatmap' },
     { href: '/backtest',  label: '📈 Backtest' },
+    { href: '/trading',   label: '🤖 AI Trading' },
     { href: '/whitelist', label: '🎯 Whitelist' },
 ];
 
@@ -32,7 +33,6 @@ export default function MobileMenu() {
             <AnimatePresence>
                 {isOpen && (
                     <>
-                        {/* Overlay */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -40,7 +40,6 @@ export default function MobileMenu() {
                             className="fixed inset-0 bg-black/60 z-40"
                             onClick={() => setIsOpen(false)}
                         />
-                        {/* Menu */}
                         <motion.div
                             initial={{ opacity: 0, x: '100%' }}
                             animate={{ opacity: 1, x: 0 }}
@@ -48,7 +47,6 @@ export default function MobileMenu() {
                             transition={{ type: 'tween', duration: 0.25 }}
                             className="fixed top-0 right-0 h-full w-72 bg-gray-900 border-l border-gray-800 shadow-2xl z-50 flex flex-col"
                         >
-                            {/* Header */}
                             <div className="flex items-center justify-between p-5 border-b border-gray-800">
                                 <span className="text-xl font-bold">🐸 Pepeline</span>
                                 <button onClick={() => setIsOpen(false)} className="p-2 text-gray-400 hover:text-white">
@@ -58,7 +56,6 @@ export default function MobileMenu() {
                                 </button>
                             </div>
 
-                            {/* Links */}
                             <nav className="flex flex-col p-4 gap-1 flex-1">
                                 {links.map(({ href, label }) => (
                                     <Link
@@ -72,7 +69,6 @@ export default function MobileMenu() {
                                 ))}
                             </nav>
 
-                            {/* Bottom CTA */}
                             <div className="p-4 border-t border-gray-800">
                                 <Link href="/whitelist" onClick={() => setIsOpen(false)}
                                     className="block w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold text-center text-sm transition-all active:scale-95">
