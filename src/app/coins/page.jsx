@@ -77,11 +77,11 @@ export default function CoinsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-12 mb-8"
+                    className="mt-12 mb-4 md:mb-8"
                 >
-                    <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2 md:gap-4">
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-bold mb-2">⛓️ On-Chain Coins</h1>
+                            <h1 className="text-2xl md:text-4xl md:text-3xl md:text-5xl font-bold mb-2">⛓️ On-Chain Coins</h1>
                             <p className="text-gray-400">
                                 Real-time sentiment powered by Alchemy • {coins.length} tokens tracked
                             </p>
@@ -98,7 +98,7 @@ export default function CoinsPage() {
                     </div>
 
                     {/* On-chain stats bar */}
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 md:grid-cols-6 gap-3 mt-6">
                         {[
                             { label: 'Total Tracked', value: coins.length, icon: '🪙' },
                             { label: 'Bullish', value: coins.filter(c => c.sentiment >= 60).length, icon: '🟢' },
@@ -155,7 +155,7 @@ export default function CoinsPage() {
 
                 {/* Coins Grid */}
                 {loading ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                         {[...Array(20)].map((_, i) => (
                             <div key={i} className="p-4 bg-gray-800/50 rounded-xl animate-pulse h-52" />
                         ))}
@@ -165,7 +165,7 @@ export default function CoinsPage() {
                         No coins found matching your search.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                         {sorted.map((coin, idx) => (
                             <Link key={coin.id} href={`/coin/${coin.id}`}>
                                 <motion.div

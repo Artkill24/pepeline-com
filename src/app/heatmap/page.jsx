@@ -170,11 +170,11 @@ export default function HeatmapPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
+                    className="mb-4 md:mb-8"
                 >
-                    <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2 md:gap-4">
                         <div>
-                            <h1 className="text-4xl font-black mb-1">🔥 Sentiment Heatmap</h1>
+                            <h1 className="text-2xl md:text-4xl font-black mb-1">🔥 Sentiment Heatmap</h1>
                             <p className="text-gray-400">Real-time on-chain sentiment for {coins.length} tokens</p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export default function HeatmapPage() {
                 ) : sorted.length === 0 ? (
                     <div className="text-center py-20 text-gray-400">No coins match your filter.</div>
                 ) : (
-                    <div className={`grid gap-3 ${size === 'large' ? 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : size === 'medium' ? 'grid-cols-4 md:grid-cols-6 lg:grid-cols-7' : 'grid-cols-5 md:grid-cols-8 lg:grid-cols-10'}`}>
+                    <div className={`grid gap-3 ${size === 'large' ? 'grid-cols-1 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : size === 'medium' ? 'grid-cols-4 md:grid-cols-6 lg:grid-cols-7' : 'grid-cols-5 md:grid-cols-8 lg:grid-cols-10'}`}>
                         {sorted.map((coin, i) => (
                             <CoinBlock key={coin.id} coin={coin} size={size} />
                         ))}

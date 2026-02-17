@@ -96,13 +96,13 @@ export default function PortfolioPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8">
             <div className="max-w-5xl mx-auto">
                 <Header />
 
                 {/* Title */}
-                <div className="mt-12 mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-2">💼 Portfolio Advisor</h1>
+                <div className="mt-12 mb-4 md:mb-8">
+                    <h1 className="text-2xl md:text-4xl md:text-3xl md:text-5xl font-bold mb-2">💼 Portfolio Advisor</h1>
                     <p className="text-gray-400">AI-powered portfolio analysis & recommendations</p>
                 </div>
 
@@ -110,7 +110,7 @@ export default function PortfolioPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-6 bg-gray-800/60 rounded-xl border border-gray-700 mb-8 relative"
+                    className="p-3 md:p-6 bg-gray-800/60 rounded-xl border border-gray-700 mb-4 md:mb-8 relative"
                 >
                     <p className="text-sm text-gray-400 mb-4">Add your holdings</p>
                     <div className="flex flex-col md:flex-row gap-3">
@@ -158,7 +158,7 @@ export default function PortfolioPage() {
 
                 {/* Current Holdings */}
                 {holdings.length > 0 && (
-                    <div className="mb-8">
+                    <div className="mb-4 md:mb-8">
                         <div className="flex items-center justify-between mb-4">
                             <p className="text-sm text-gray-400">Your Holdings ({holdings.length} coins)</p>
                             <button onClick={clearPortfolio} className="text-xs text-red-400 hover:text-red-300">🗑️ Clear all</button>
@@ -188,7 +188,7 @@ export default function PortfolioPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
                         {/* Top Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
                             <div className="p-4 bg-gray-800/60 rounded-xl border border-gray-700">
                                 <p className="text-xs text-gray-500 mb-1">Total Value</p>
                                 <p className="text-xl font-bold">${analysis.stats.totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
@@ -212,10 +212,10 @@ export default function PortfolioPage() {
                         </div>
 
                         {/* Sentiment + Risk + Diversification */}
-                        <div className="grid md:grid-cols-3 gap-4 mb-6">
+                        <div className="grid md:grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 mb-6">
                             <div className="p-5 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 text-center">
                                 <p className="text-xs text-gray-500 mb-2">Portfolio Sentiment</p>
-                                <p className="text-5xl font-bold mb-2">{analysis.sentiment.score}</p>
+                                <p className="text-3xl md:text-5xl font-bold mb-2">{analysis.sentiment.score}</p>
                                 <p className="text-lg">{analysis.sentiment.emoji} {analysis.sentiment.level}</p>
                             </div>
                             <div className={`p-5 rounded-xl border text-center ${
@@ -224,7 +224,7 @@ export default function PortfolioPage() {
                                 'bg-red-900/20 border-red-500/30'
                             }`}>
                                 <p className="text-xs text-gray-500 mb-2">Risk Score</p>
-                                <p className="text-5xl font-bold mb-2">{analysis.risk.score}</p>
+                                <p className="text-3xl md:text-5xl font-bold mb-2">{analysis.risk.score}</p>
                                 <p className="text-lg">{analysis.risk.emoji} {analysis.risk.level}</p>
                             </div>
                             <div className={`p-5 rounded-xl border text-center ${
@@ -233,7 +233,7 @@ export default function PortfolioPage() {
                                 'bg-red-900/20 border-red-500/30'
                             }`}>
                                 <p className="text-xs text-gray-500 mb-2">Diversification</p>
-                                <p className="text-5xl font-bold mb-2">{analysis.diversification}</p>
+                                <p className="text-3xl md:text-5xl font-bold mb-2">{analysis.diversification}</p>
                                 <p className="text-lg">{analysis.diversification >= 75 ? '✅ Good' : analysis.diversification >= 50 ? '⚠️ OK' : '🚨 Low'}</p>
                             </div>
                         </div>
@@ -241,7 +241,7 @@ export default function PortfolioPage() {
                         {/* AI Recommendations */}
                         <div className="mb-6">
                             <h3 className="text-xl font-bold mb-4">🤖 AI Recommendations</h3>
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid md:grid-cols-2 gap-2 md:gap-4">
                                 {analysis.recommendations.map((rec, idx) => (
                                     <div key={idx} className={`p-4 rounded-xl border ${
                                         rec.type === 'warning' ? 'bg-orange-900/15 border-orange-500/30' :
@@ -256,12 +256,12 @@ export default function PortfolioPage() {
                         </div>
 
                         {/* Coin Breakdown */}
-                        <div className="p-6 bg-gray-800/50 rounded-xl border border-gray-700">
+                        <div className="p-3 md:p-6 bg-gray-800/50 rounded-xl border border-gray-700">
                             <h3 className="text-lg font-bold mb-4">📊 Breakdown</h3>
                             <div className="space-y-3">
                                 {analysis.coins.map(coin => (
                                     <Link key={coin.id} href={`/coin/${coin.id}`}>
-                                        <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-700/50 transition">
+                                        <div className="flex items-center gap-2 md:gap-4 p-3 rounded-lg hover:bg-gray-700/50 transition">
                                             <img src={coin.image} alt={coin.name} className="w-9 h-9 rounded-full" />
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function PortfolioPage() {
                         animate={{ opacity: 1 }}
                         className="text-center py-16"
                     >
-                        <p className="text-6xl mb-4">💼</p>
+                        <p className="text-4xl md:text-6xl mb-4">💼</p>
                         <h3 className="text-xl font-bold mb-2">Add your first coin</h3>
                         <p className="text-gray-400">Search and add coins above to get AI-powered portfolio analysis</p>
                     </motion.div>

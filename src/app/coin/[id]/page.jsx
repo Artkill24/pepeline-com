@@ -97,13 +97,13 @@ export default function CoinPage({ params }) {
                 </Link>
 
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center h-64 gap-4">
+                    <div className="flex flex-col items-center justify-center h-64 gap-2 md:gap-4">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
                         <p className="text-gray-400 text-sm">Loading on-chain data...</p>
                     </div>
                 ) : error ? (
                     <div className="text-center py-20">
-                        <div className="text-6xl mb-4">❌</div>
+                        <div className="text-4xl md:text-6xl mb-4">❌</div>
                         <p className="text-red-400 mb-2">{error}</p>
                         <Link href="/coins" className="text-purple-400 hover:underline">← Go back</Link>
                     </div>
@@ -112,9 +112,9 @@ export default function CoinPage({ params }) {
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
                             {/* Header Card */}
-                            <div className={`p-6 rounded-2xl bg-gradient-to-br ${cfg.bg} border ${cfg.border} mb-6`}>
-                                <div className="flex items-center justify-between flex-wrap gap-4">
-                                    <div className="flex items-center gap-4">
+                            <div className={`p-3 md:p-6 rounded-2xl bg-gradient-to-br ${cfg.bg} border ${cfg.border} mb-6`}>
+                                <div className="flex items-center justify-between flex-wrap gap-2 md:gap-4">
+                                    <div className="flex items-center gap-2 md:gap-4">
                                         <img
                                             src={coin.image}
                                             alt={coin.name}
@@ -133,7 +133,7 @@ export default function CoinPage({ params }) {
                                     </div>
                                     <div className="text-right">
                                         <PriceFlash direction={priceDir}>
-                                            <p className="text-4xl font-black">{formatPrice(coin.price)}</p>
+                                            <p className="text-2xl md:text-4xl font-black">{formatPrice(coin.price)}</p>
                                         </PriceFlash>
                                         <p className={`text-lg font-bold ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}% (24h)
@@ -144,12 +144,12 @@ export default function CoinPage({ params }) {
                             </div>
 
                             {/* Sentiment + On-Chain Row */}
-                            <div className="grid md:grid-cols-2 gap-4 mb-6">
+                            <div className="grid md:grid-cols-2 gap-2 md:gap-4 mb-6">
 
                                 {/* Sentiment */}
                                 <div className={`p-5 rounded-xl bg-gradient-to-br ${cfg.bg} border ${cfg.border}`}>
                                     <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Pepeline Sentiment</p>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 md:gap-4">
                                         <div className="relative">
                                             <svg width="80" height="80" className="-rotate-90">
                                                 <circle cx="40" cy="40" r="32" fill="none" stroke="#1e1b4b" strokeWidth="8" />

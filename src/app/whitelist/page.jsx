@@ -34,44 +34,42 @@ const getProgress = (pts) => {
     return Math.min(100, Math.round(((pts - base) / (next.min - base)) * 100));
 };
 
-// ─── Leaderboard row ────────────────────────────────────────────────────────
 function LeaderboardRow({ user, index, currentWallet }) {
     const tier   = getTier(user.points);
     const medals = ['🥇', '🥈', '🥉'];
     const isSelf = user.wallet_address === currentWallet;
     return (
-        <div className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${
+        <div className={`flex items-center justify-between px-2 md:px-3 py-2 md:py-2.5 rounded-xl transition-all ${
             isSelf ? 'bg-green-900/30 border border-green-500/30' : 'bg-gray-900/50 hover:bg-gray-700/30'
         }`}>
-            <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-sm font-bold text-gray-400 w-6 shrink-0 text-center">
+            <div className="flex items-center gap-1.5 md:gap-2.5 min-w-0 flex-1">
+                <span className="text-xs md:text-sm font-bold text-gray-400 w-5 md:w-6 shrink-0 text-center">
                     {index < 3 ? medals[index] : index + 1}
                 </span>
-                <span className="font-mono text-xs text-gray-300 truncate">
-                    {user.wallet_address.slice(0, 6)}…{user.wallet_address.slice(-4)}
+                <span className="font-mono text-[10px] md:text-xs text-gray-300 truncate">
+                    {user.wallet_address.slice(0, 4)}…{user.wallet_address.slice(-3)}
                 </span>
-                {isSelf && <span className="text-xs text-green-400 shrink-0">(you)</span>}
+                {isSelf && <span className="text-[10px] md:text-xs text-green-400 shrink-0">(you)</span>}
             </div>
-            <div className="flex items-center gap-2 shrink-0 ml-2">
+            <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
                 {tier && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-md border ${tier.bg} ${tier.color} font-semibold hidden sm:inline`}>
+                    <span className={`text-[10px] md:text-xs px-1 md:px-1.5 py-0.5 rounded-md border ${tier.bg} ${tier.color} font-semibold hidden sm:inline`}>
                         {tier.icon} {tier.label}
                     </span>
                 )}
-                <span className="text-green-400 font-bold text-sm tabular-nums">{user.points}</span>
+                <span className="text-green-400 font-bold text-xs md:text-sm tabular-nums">{user.points}</span>
             </div>
         </div>
     );
 }
 
-// ─── Action row ─────────────────────────────────────────────────────────────
 function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getReferralLink, claimedToday }) {
     const isDone = claimedToday?.includes(action.id);
-    const base   = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-40';
+    const base   = 'px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[10px] md:text-xs font-semibold transition-all disabled:opacity-40';
 
     let btn;
     if (isDone && action.daily) {
-        btn = <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700 text-gray-400">✓ Done</span>;
+        btn = <span className={`${base} bg-gray-700 text-gray-400`}>✓ Done</span>;
     } else if (action.id === 'telegram_bot') {
         btn = <a href="https://t.me/Pepelinebot" target="_blank" rel="noopener noreferrer"
             onClick={() => claimPoints(wallet, 'telegram_bot')}
@@ -86,7 +84,7 @@ function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getRefer
             className={`${base} bg-gray-600 hover:bg-gray-500`}>Share</a>;
     } else if (action.id === 'refer_friend') {
         btn = <button onClick={() => { navigator.clipboard.writeText(getReferralLink()); setMessage({ type: 'success', text: 'Referral link copied! 🎉' }); }}
-            className={`${base} bg-yellow-600 hover:bg-yellow-500`}>Copy Link</button>;
+            className={`${base} bg-yellow-600 hover:bg-yellow-500 whitespace-nowrap`}>Copy Link</button>;
     } else if (action.id === 'read_brief') {
         btn = <Link href="/#market-brief" onClick={() => claimPoints(wallet, 'read_brief')}
             className={`${base} bg-teal-600 hover:bg-teal-500`}>Read</Link>;
@@ -98,352 +96,245 @@ function ActionRow({ action, wallet, claiming, claimPoints, setMessage, getRefer
     }
 
     return (
-        <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-            isDone && action.daily
-                ? 'bg-gray-900/20 border-gray-700/40 opacity-60'
-                : 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
-        }`}>
-            <div className="flex items-center gap-3 min-w-0">
-                <span className="text-2xl shrink-0">{action.icon}</span>
-                <div className="min-w-0">
-                    <p className="font-semibold text-sm">{action.label}</p>
-                    <p className="text-xs text-gray-400 truncate">{action.desc}</p>
+        <div className="flex items-center justify-between p-2 md:p-3 bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                <span className="text-xl md:text-2xl shrink-0">{action.icon}</span>
+                <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-xs md:text-sm truncate">{action.label}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 hidden sm:block">{action.desc}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0 ml-3">
-                <span className="text-green-400 font-bold text-sm">+{action.points}</span>
+            <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-2">
+                <span className="text-green-400 font-bold text-xs md:text-sm whitespace-nowrap">+{action.points}</span>
                 {btn}
             </div>
         </div>
     );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
 export default function WhitelistPage() {
-    const { publicKey, connected, disconnect } = useWallet();
+    const { publicKey, connected } = useWallet();
     const { setVisible } = useWalletModal();
+    const [user, setUser] = useState(null);
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [globalStats, setGlobalStats] = useState(null);
+    const [claiming, setClaiming] = useState(null);
+    const [message, setMessage] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [claimedToday, setClaimedToday] = useState([]);
 
-    const [wallet,         setWallet]         = useState('');
-    const [userData,       setUserData]       = useState(null);
-    const [leaderboard,    setLeaderboard]    = useState([]);
-    const [stats,          setStats]          = useState({ total_users: 0, whitelisted: 0 });
-    const [loading,        setLoading]        = useState(false);
-    const [claiming,       setClaiming]       = useState(null);
-    const [message,        setMessage]        = useState(null);
-    const [referralCode,   setReferralCode]   = useState('');
-    const [referralCopied, setReferralCopied] = useState(false);
+    const wallet = publicKey?.toString();
 
-    const claimedToday = userData?.claimed_today || [];
-
-    // Auto-connect when wallet connects
     useEffect(() => {
-        if (connected && publicKey) {
-            const addr = publicKey.toBase58();
-            setWallet(addr);
-            fetchUser(addr);
-            claimPoints(addr, 'daily_visit');
-            claimPoints(addr, 'connect_wallet');
+        if (wallet && connected) {
+            fetchUser();
+            claimPoints(wallet, 'connect_wallet');
+            claimPoints(wallet, 'daily_visit');
         }
-        if (!connected) {
-            setWallet('');
-            setUserData(null);
-        }
-    }, [connected, publicKey]);
+    }, [wallet, connected]);
 
     useEffect(() => {
         fetchLeaderboard();
-        const p = new URLSearchParams(window.location.search);
-        if (p.get('ref')) setReferralCode(p.get('ref'));
+        const interval = setInterval(fetchLeaderboard, 30000);
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchLeaderboard = async () => {
-        try {
-            const res  = await fetch('/api/points');
-            const data = await res.json();
-            setLeaderboard(data.leaderboard || []);
-            setStats({ total_users: data.total_users || 0, whitelisted: data.whitelisted || 0 });
-        } catch (_) {}
-    };
-
-    const fetchUser = async (addr) => {
+    const fetchUser = async () => {
+        if (!wallet) return;
         setLoading(true);
         try {
-            const res  = await fetch(`/api/points?wallet=${addr}`);
+            const res = await fetch(`/api/points?wallet=${wallet}`);
             const data = await res.json();
-            setUserData(data);
-        } catch (_) {}
+            setUser(data);
+            setClaimedToday(data.claimed_today || []);
+        } catch (err) {
+            console.error(err);
+        }
         setLoading(false);
     };
 
-    const claimPoints = async (addr, action) => {
-        setClaiming(action);
+    const fetchLeaderboard = async () => {
         try {
-            const res  = await fetch('/api/points', {
+            const res = await fetch('/api/points');
+            const data = await res.json();
+            setLeaderboard(data.leaderboard || []);
+            setGlobalStats({ total: data.total_users || 0, whitelisted: data.whitelisted || 0 });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const claimPoints = async (w, actionId) => {
+        if (!w || claiming === actionId) return;
+        setClaiming(actionId);
+        try {
+            const res = await fetch('/api/points', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ wallet: addr || wallet, action, referral_code: referralCode || undefined }),
+                body: JSON.stringify({ wallet: w, action: actionId }),
             });
             const data = await res.json();
             if (data.success) {
-                setMessage({ type: 'success', text: `+${data.points_earned} pts! Total: ${data.total_points} 🎉` });
-                fetchUser(addr || wallet);
+                setMessage({ type: 'success', text: `+${data.points_earned} points! 🎉` });
+                fetchUser();
                 fetchLeaderboard();
             } else {
-                setMessage({ type: 'info', text: data.message || 'Already claimed today' });
+                setMessage({ type: 'error', text: data.error || 'Failed to claim' });
             }
-        } catch (_) {
-            setMessage({ type: 'error', text: 'Network error — try again' });
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Network error' });
         }
         setClaiming(null);
-        setTimeout(() => setMessage(null), 3500);
+        setTimeout(() => setMessage(null), 3000);
     };
 
-    const handleDisconnect = () => {
-        disconnect();
-        setWallet('');
-        setUserData(null);
-    };
+    const getReferralLink = () => `${window.location.origin}/whitelist?ref=${wallet}`;
 
-    const getReferralLink    = () => `https://pepeline.com/whitelist?ref=${wallet}`;
-    const handleCopyReferral = () => {
-        navigator.clipboard.writeText(getReferralLink());
-        setReferralCopied(true);
-        setMessage({ type: 'success', text: 'Referral link copied! 🎉' });
-        setTimeout(() => setReferralCopied(false), 2000);
-    };
-
-    const currentTier = userData ? getTier(userData.points)     : null;
-    const nextTier    = userData ? getNextTier(userData.points) : TIERS[0];
-    const progress    = userData ? getProgress(userData.points || 0) : 0;
+    const tier = user ? getTier(user.points) : null;
+    const nextTier = user ? getNextTier(user.points) : null;
+    const progress = user ? getProgress(user.points) : 0;
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
             <Header />
-
-            {/* Toast */}
-            <AnimatePresence>
-                {message && (
-                    <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className={`fixed top-20 right-4 z-50 px-5 py-3 rounded-xl font-semibold shadow-2xl text-sm max-w-xs ${
-                            message.type === 'success' ? 'bg-green-600' : message.type === 'error' ? 'bg-red-600' : 'bg-blue-600'
-                        }`}>
-                        {message.type === 'success' ? '✅' : message.type === 'error' ? '❌' : 'ℹ️'} {message.text}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <div className="container mx-auto px-4 py-12 max-w-6xl">
-
+            <div className="container mx-auto px-3 sm:px-4 py-6 md:py-12 max-w-6xl">
+                
                 {/* Hero */}
-                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-                    <div className="text-7xl mb-4 select-none">🎯</div>
-                    <h1 className="text-5xl font-extrabold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-purple-500">
-                        Pepeline Whitelist
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-12">
+                    <div className="text-4xl md:text-6xl mb-3 md:mb-4">🎯</div>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+                        $SENT Token Whitelist
                     </h1>
-                    <p className="text-xl text-gray-300 mb-2">
-                        Earn points → Get <span className="text-green-400 font-bold">$SENT</span> token early
+                    <p className="text-sm md:text-xl text-gray-300">
+                        Earn points to secure your spot in the token launch
                     </p>
-                    <p className="text-sm text-gray-500">100 pts = Whitelist · 250 = Priority · 500 = OG Member</p>
-
-                    {/* Global stats */}
-                    <div className="flex justify-center gap-8 mt-6">
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-white">{stats.total_users.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">Participants</p>
-                        </div>
-                        <div className="w-px bg-gray-700" />
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-green-400">{stats.whitelisted.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">Whitelisted</p>
-                        </div>
-                        <div className="w-px bg-gray-700" />
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-purple-400">{leaderboard.length}</p>
-                            <p className="text-xs text-gray-500">On leaderboard</p>
-                        </div>
-                    </div>
                 </motion.div>
 
-                {/* Tier cards */}
-                <div className="grid md:grid-cols-3 gap-4 mb-10">
-                    {TIERS.map((tier, i) => {
-                        const isActive = currentTier?.label === tier.label;
-                        return (
-                            <motion.div key={tier.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                                className={`p-5 rounded-2xl border text-center transition-all ${tier.bg} ${isActive ? 'ring-2 ring-offset-1 ring-offset-gray-900' : ''}`}>
-                                <div className="text-4xl mb-2">{tier.icon}</div>
-                                <p className={`text-xl font-bold ${tier.color}`}>{tier.label}</p>
-                                <p className="text-2xl font-extrabold mt-1">{tier.min}+ pts</p>
-                                <p className="text-xs text-gray-400 mt-2 leading-relaxed">{tier.perk}</p>
-                                {isActive && <span className="mt-3 inline-block text-xs px-2 py-0.5 rounded-full bg-white/10 text-white font-semibold">Your tier ✓</span>}
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                {/* Global Stats */}
+                {globalStats && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-2 md:gap-4 mb-6 md:mb-8">
+                        <div className="p-3 md:p-4 bg-purple-900/20 rounded-xl border border-purple-700/30 text-center">
+                            <p className="text-xs md:text-sm text-gray-400 mb-1">Total Participants</p>
+                            <p className="text-2xl md:text-3xl font-bold text-purple-400">{globalStats.total}</p>
+                        </div>
+                        <div className="p-3 md:p-4 bg-green-900/20 rounded-xl border border-green-700/30 text-center">
+                            <p className="text-xs md:text-sm text-gray-400 mb-1">Whitelisted</p>
+                            <p className="text-2xl md:text-3xl font-bold text-green-400">{globalStats.whitelisted}</p>
+                        </div>
+                    </motion.div>
+                )}
 
-                <div className="grid lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-6">
+                {/* Message Toast */}
+                <AnimatePresence>
+                    {message && (
+                        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            className={`mb-4 md:mb-6 p-3 md:p-4 rounded-xl text-center font-semibold ${
+                                message.type === 'success' ? 'bg-green-900/50 text-green-300 border border-green-500/50' : 'bg-red-900/50 text-red-300 border border-red-500/50'
+                            }`}>
+                            {message.text}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                        {/* Connect wallet OR User stats */}
-                        {!wallet ? (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="p-8 bg-gray-800 rounded-2xl border border-gray-700 text-center">
-                                <div className="text-5xl mb-4">👻</div>
-                                <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
-                                <p className="text-gray-400 text-sm mb-6">
-                                    Connect your Solana wallet to start earning points toward{' '}
-                                    <span className="text-green-400 font-bold">$SENT</span>
-                                </p>
-                                <button
-                                    onClick={() => setVisible(true)}
-                                    className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 rounded-xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-green-900/30"
-                                >
-                                    <span className="text-xl">👛</span> Connect Phantom / Solflare
-                                </button>
+                {/* Connect Wallet CTA */}
+                {!connected && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        className="mb-6 md:mb-8 p-4 md:p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-2xl border border-purple-500/30 text-center">
+                        <p className="text-base md:text-lg mb-3 md:mb-4">Connect your Solana wallet to start earning points</p>
+                        <button onClick={() => setVisible(true)}
+                            className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-sm md:text-base transition-all transform active:scale-95">
+                            👛 Connect Wallet
+                        </button>
+                    </motion.div>
+                )}
 
-                                {/* Supported wallets */}
-                                <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
-                                    <span>Supports:</span>
-                                    <span className="flex items-center gap-1">👻 Phantom</span>
-                                    <span>·</span>
-                                    <span className="flex items-center gap-1">🔥 Solflare</span>
+                {connected && (
+                    <>
+                        {/* User Stats Card */}
+                        {user && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                                className="mb-6 md:mb-8 p-4 md:p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-xs md:text-sm text-gray-400 mb-1">Your Wallet</p>
+                                        <p className="font-mono text-sm md:text-base font-bold truncate">{wallet.slice(0, 8)}...{wallet.slice(-6)}</p>
+                                    </div>
+                                    <button onClick={() => setVisible(true)}
+                                        className="px-3 md:px-4 py-1.5 md:py-2 bg-red-600 hover:bg-red-700 rounded-lg text-xs md:text-sm font-semibold transition-all whitespace-nowrap">
+                                        Disconnect
+                                    </button>
                                 </div>
 
-                                {referralCode && (
-                                    <p className="text-xs text-green-400 mt-4">
-                                        🎉 Referred by <span className="font-mono">{referralCode.slice(0, 8)}…</span> — your referrer earns +25 pts!
-                                    </p>
+                                <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+                                    <div className="text-center p-3 md:p-4 bg-gray-900/50 rounded-xl">
+                                        <p className="text-xs md:text-sm text-gray-400 mb-1">Your Points</p>
+                                        <p className="text-3xl md:text-4xl font-bold text-green-400">{user.points}</p>
+                                    </div>
+                                    <div className="text-center p-3 md:p-4 bg-gray-900/50 rounded-xl">
+                                        <p className="text-xs md:text-sm text-gray-400 mb-1">Referrals</p>
+                                        <p className="text-3xl md:text-4xl font-bold text-purple-400">{user.referrals || 0}</p>
+                                    </div>
+                                </div>
+
+                                {tier ? (
+                                    <div className={`p-3 md:p-4 rounded-xl border ${tier.bg} ${tier.color}`}>
+                                        <p className="text-xs md:text-sm font-semibold mb-1">{tier.icon} {tier.label} Unlocked!</p>
+                                        <p className="text-[10px] md:text-xs text-gray-400">{tier.perk}</p>
+                                    </div>
+                                ) : nextTier ? (
+                                    <div className="p-3 md:p-4 bg-gray-900/50 rounded-xl">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-xs md:text-sm text-gray-400">Progress to {nextTier.label}</p>
+                                            <p className="text-xs md:text-sm font-bold">{user.points}/{nextTier.min}</p>
+                                        </div>
+                                        <div className="w-full bg-gray-700 rounded-full h-2">
+                                            <div className={`h-2 rounded-full bg-gradient-to-r ${nextTier.bar}`} style={{ width: `${progress}%` }} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-3 md:p-4 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl text-center">
+                                        <p className="font-bold text-sm md:text-base">🎉 Max Tier Achieved!</p>
+                                    </div>
                                 )}
                             </motion.div>
-                        ) : (
-                            /* User stats card */
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
-                                <div className="flex items-center justify-between mb-5">
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Connected</p>
-                                        <p className="font-mono text-sm text-gray-200">{wallet.slice(0, 8)}…{wallet.slice(-6)}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {currentTier
-                                            ? <span className={`px-3 py-1.5 rounded-full text-sm font-bold border ${currentTier.bg} ${currentTier.color}`}>{currentTier.icon} {currentTier.label}</span>
-                                            : <span className="px-3 py-1.5 rounded-full text-sm font-bold border bg-gray-700/50 border-gray-600 text-gray-400">No tier yet</span>
-                                        }
-                                    </div>
-                                </div>
-
-                                {loading ? (
-                                    <div className="space-y-3 animate-pulse">
-                                        <div className="h-10 bg-gray-700 rounded-xl w-1/3" />
-                                        <div className="h-3 bg-gray-700 rounded-full" />
-                                    </div>
-                                ) : userData ? (
-                                    <>
-                                        <div className="flex items-end justify-between mb-2">
-                                            <span className="text-5xl font-extrabold text-green-400 tabular-nums leading-none">
-                                                {(userData.points || 0).toLocaleString()}
-                                            </span>
-                                            <span className="text-gray-400 text-sm mb-1">
-                                                / {nextTier ? `${nextTier.min} pts` : 'MAX'} for {nextTier?.label ?? '👑 OG Member'}
-                                            </span>
-                                        </div>
-                                        <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden mb-4">
-                                            <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
-                                                className={`h-3 rounded-full bg-gradient-to-r ${currentTier?.bar || 'from-green-500 to-blue-500'}`} />
-                                        </div>
-
-                                        {/* Mini stats */}
-                                        <div className="grid grid-cols-3 gap-3 text-center text-sm mb-5">
-                                            <div className="bg-gray-900/50 rounded-xl p-3">
-                                                <p className="text-lg font-bold text-white">#{userData.rank || '—'}</p>
-                                                <p className="text-xs text-gray-500">Rank</p>
-                                            </div>
-                                            <div className="bg-gray-900/50 rounded-xl p-3">
-                                                <p className="text-lg font-bold text-blue-400">{userData.visits || 0}</p>
-                                                <p className="text-xs text-gray-500">Visits</p>
-                                            </div>
-                                            <div className="bg-gray-900/50 rounded-xl p-3">
-                                                <p className="text-lg font-bold text-yellow-400">{userData.referrals || 0}</p>
-                                                <p className="text-xs text-gray-500">Referrals</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Referral box */}
-                                        <div className="p-4 bg-yellow-900/20 border border-yellow-500/20 rounded-xl mb-4">
-                                            <p className="text-xs text-yellow-400 font-semibold mb-2">👥 Your Referral Link — +25 pts per friend</p>
-                                            <div className="flex gap-2">
-                                                <input readOnly value={getReferralLink()}
-                                                    className="flex-1 px-3 py-2 bg-gray-900 rounded-lg text-xs font-mono text-gray-300 border border-gray-700 outline-none" />
-                                                <button onClick={handleCopyReferral}
-                                                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all text-white ${referralCopied ? 'bg-green-600' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
-                                                    {referralCopied ? '✓ Copied' : 'Copy'}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Disconnect */}
-                                        <button onClick={handleDisconnect}
-                                            className="w-full py-2 bg-gray-700/50 hover:bg-gray-700 rounded-xl text-xs text-gray-400 hover:text-gray-300 transition-all">
-                                            Disconnect wallet
-                                        </button>
-                                    </>
-                                ) : null}
-                            </motion.div>
                         )}
 
-                        {/* Actions */}
-                        {wallet && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
-                                <div className="flex items-center justify-between mb-5">
-                                    <h2 className="text-xl font-bold">🎮 Earn Points</h2>
-                                    <span className="text-xs text-gray-500">Daily tasks reset at 00:00 UTC</span>
-                                </div>
-                                <div className="space-y-2.5">
-                                    {ACTIONS.map((action) => (
-                                        <ActionRow key={action.id} action={action} wallet={wallet} claiming={claiming}
-                                            claimPoints={claimPoints} setMessage={setMessage}
-                                            getReferralLink={getReferralLink} claimedToday={claimedToday} />
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
-
-                    {/* Leaderboard */}
-                    <div>
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700 sticky top-4">
-                            <div className="flex items-center justify-between mb-5">
-                                <h2 className="text-xl font-bold">🏆 Leaderboard</h2>
-                                <span className="text-xs text-gray-500">Top {Math.min(leaderboard.length, 50)}</span>
-                            </div>
-                            {leaderboard.length === 0 ? (
-                                <div className="text-center py-10">
-                                    <p className="text-4xl mb-3">🚀</p>
-                                    <p className="text-gray-400 text-sm">Be the first to join!</p>
-                                    <p className="text-gray-600 text-xs mt-1">Connect your wallet to claim the #1 spot</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
-                                    {leaderboard.map((user, i) => (
-                                        <LeaderboardRow key={user.wallet_address} user={user} index={i} currentWallet={wallet} />
-                                    ))}
-                                </div>
-                            )}
-                            {/* Tier legend */}
-                            <div className="mt-5 pt-4 border-t border-gray-700 space-y-1.5">
-                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Tier legend</p>
-                                {TIERS.map((t) => (
-                                    <div key={t.label} className="flex items-center justify-between text-xs">
-                                        <span className={`flex items-center gap-1.5 ${t.color}`}>{t.icon} {t.label}</span>
-                                        <span className="text-gray-500">{t.min}+ pts</span>
-                                    </div>
+                        {/* Actions Grid */}
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+                            className="mb-6 md:mb-8">
+                            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">💎 Earn Points</h2>
+                            <div className="space-y-2 md:space-y-3">
+                                {ACTIONS.map((action) => (
+                                    <ActionRow key={action.id} action={action} wallet={wallet} claiming={claiming}
+                                        claimPoints={claimPoints} setMessage={setMessage} getReferralLink={getReferralLink}
+                                        claimedToday={claimedToday} />
                                 ))}
                             </div>
                         </motion.div>
+                    </>
+                )}
+
+                {/* Leaderboard */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+                    <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">🏆 Leaderboard</h2>
+                    <div className="space-y-1.5 md:space-y-2 max-h-96 overflow-y-auto">
+                        {leaderboard.slice(0, 50).map((u, i) => (
+                            <LeaderboardRow key={u.wallet_address} user={u} index={i} currentWallet={wallet} />
+                        ))}
                     </div>
-                </div>
+                </motion.div>
+
+                {/* Tiers Info */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                    className="mt-6 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    {TIERS.map((t) => (
+                        <div key={t.label} className={`p-4 md:p-6 rounded-xl border ${t.bg}`}>
+                            <p className={`text-2xl md:text-3xl ${t.color} font-bold mb-2`}>{t.icon} {t.label}</p>
+                            <p className="text-xs md:text-sm text-gray-400 mb-2">{t.min}+ points</p>
+                            <p className="text-xs md:text-sm text-gray-300">{t.perk}</p>
+                        </div>
+                    ))}
+                </motion.div>
             </div>
             <Footer />
         </main>
