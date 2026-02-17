@@ -11,7 +11,6 @@ import MarketBrief from '@/components/MarketBrief';
 import Roadmap from '@/components/Roadmap';
 import Footer from '@/components/Footer';
 import SEOContent from '@/components/SEOContent';
-import AutoTweetButton from '@/components/AutoTweetButton';
 import NFTTrendingSection from '@/components/NFTTrendingSection';
 
 export default function Home() {
@@ -23,7 +22,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchAll();
-    // Force loading off after 8 seconds no matter what
     const timeout = setTimeout(() => setLoading(false), 8000);
     const interval = setInterval(fetchAll, 30000);
     return () => { clearInterval(interval); clearTimeout(timeout); };
@@ -82,8 +80,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a14] text-white overflow-hidden relative">
-      {/* Background glow effects */}
-      <div className="fixed inset-0 pointer-events-none">
+      {/* Background glow effects - hidden on mobile for performance */}
+      <div className="fixed inset-0 pointer-events-none hidden md:block">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-700/10 rounded-full blur-3xl" />
         <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-violet-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-indigo-700/10 rounded-full blur-3xl" />
@@ -91,102 +89,102 @@ export default function Home() {
 
       <Header />
 
-      {/* Live Ticker Bar */}
+      {/* Live Ticker Bar - slower on mobile */}
       {coins.length > 0 && (
         <div className="w-full bg-purple-950/40 border-y border-purple-800/30 overflow-hidden py-2">
           <motion.div
             animate={{ x: ['0%', '-50%'] }}
-            transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-            className="flex gap-8 whitespace-nowrap"
+            transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+            className="flex gap-6 md:gap-8 whitespace-nowrap"
           >
             {[...coins, ...coins].map((coin, i) => (
-              <span key={i} className="flex items-center gap-2 text-sm">
+              <span key={i} className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
                 <span className="text-gray-400">{coin.symbol}</span>
                 <span className="font-semibold">{formatPrice(coin.price)}</span>
                 <span className={coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}>
                   {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}%
                 </span>
-                <span className="text-purple-700 mx-2">|</span>
+                <span className="text-purple-700 mx-1 md:mx-2">|</span>
               </span>
             ))}
           </motion.div>
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-12 relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12 relative z-10">
 
-        {/* Hero */}
+        {/* Hero - mobile optimized */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          className="text-center mb-8 md:mb-14"
         >
           <motion.div
             animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
-            className="text-8xl mb-6 inline-block"
+            className="text-5xl sm:text-6xl md:text-8xl mb-4 md:mb-6 inline-block"
           >
             🐸
           </motion.div>
 
-          <h1 className="text-6xl md:text-8xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-3 md:mb-4 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 px-2">
             Pepeline
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-4 font-light">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-3 md:mb-4 font-light px-4">
             Real-Time Crypto Sentiment Intelligence
           </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap mb-6">
+          <div className="flex items-center justify-center gap-2 flex-wrap mb-4 md:mb-6 px-2">
             {['Alchemy On-Chain', 'Gemini AI', 'Live Data', '20+ Tokens'].map((tag) => (
-              <span key={tag} className="px-3 py-1 bg-purple-900/40 border border-purple-700/40 rounded-full text-xs text-purple-300">
+              <span key={tag} className="px-2 md:px-3 py-1 bg-purple-900/40 border border-purple-700/40 rounded-full text-[10px] md:text-xs text-purple-300">
                 {tag}
               </span>
             ))}
           </div>
 
           {lastUpdate && (
-            <p className="text-xs text-gray-600 mb-8">
+            <p className="text-[10px] md:text-xs text-gray-600 mb-4 md:mb-8">
               🔄 Updated {lastUpdate.toLocaleTimeString()} — auto-refresh every 30s
             </p>
           )}
 
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap justify-center gap-4">
+          {/* CTA Buttons - stacked on mobile */}
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 px-4">
             <Link href="/dashboard"
-              className="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-900/40">
+              className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-xl font-bold text-sm md:text-base lg:text-lg transition-all transform active:scale-95 shadow-lg shadow-purple-900/40">
               📊 Dashboard
             </Link>
             <Link href="/whitelist"
-              className="px-8 py-4 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-pink-900/40">
+              className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700 rounded-xl font-bold text-sm md:text-base lg:text-lg transition-all transform active:scale-95 shadow-lg shadow-pink-900/40">
               🎯 Get Whitelist
             </Link>
             <a href="https://t.me/Pepelinebot" target="_blank" rel="noopener noreferrer"
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-blue-900/30">
+              className="px-6 md:px-8 py-3 md:py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-sm md:text-base lg:text-lg transition-all transform active:scale-95 shadow-lg shadow-blue-900/30">
               🤖 Telegram
             </a>
             <Link href="/coins"
-              className="px-8 py-4 bg-gray-800/80 hover:bg-gray-700/80 border border-purple-700/30 rounded-xl font-bold text-lg transition-all transform hover:scale-105">
+              className="px-6 md:px-8 py-3 md:py-4 bg-gray-800/80 hover:bg-gray-700/80 border border-purple-700/30 rounded-xl font-bold text-sm md:text-base lg:text-lg transition-all transform active:scale-95">
               ⛓️ Coins
             </Link>
           </div>
         </motion.div>
 
         {/* Main Index Display */}
-        <div className="mb-14">
+        <div className="mb-8 md:mb-14">
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="flex flex-col items-center gap-4">
+            <div className="flex justify-center items-center h-48 md:h-64">
+              <div className="flex flex-col items-center gap-3 md:gap-4">
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
-                  <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border border-purple-500/30"></div>
+                  <div className="animate-spin rounded-full h-12 md:h-16 w-12 md:w-16 border-t-2 border-b-2 border-purple-500"></div>
+                  <div className="absolute inset-0 animate-ping rounded-full h-12 md:h-16 w-12 md:w-16 border border-purple-500/30"></div>
                 </div>
-                <p className="text-gray-400 text-sm">Fetching on-chain data...</p>
+                <p className="text-gray-400 text-xs md:text-sm">Fetching on-chain data...</p>
               </div>
             </div>
           ) : index ? (
             <IndexInlineDisplay index={index} />
           ) : (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-400 text-sm">
               Failed to load index. Please refresh.
             </div>
           )}
@@ -202,55 +200,55 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mb-14"
+              className="mb-8 md:mb-14"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">⛓️ Live On-Chain Data</h2>
-                <span className="flex items-center gap-2 text-xs text-purple-400">
-                  <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
-                  Alchemy Ethereum Mainnet
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-xl md:text-2xl font-bold">⛓️ Live On-Chain Data</h2>
+                <span className="flex items-center gap-2 text-[10px] md:text-xs text-purple-400">
+                  <span className="w-1.5 md:w-2 h-1.5 md:h-2 bg-purple-400 rounded-full animate-pulse"></span>
+                  <span className="hidden sm:inline">Alchemy Ethereum Mainnet</span>
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-orange-900/20 to-purple-950/50 rounded-xl border border-orange-500/20">
-                  <div className="text-3xl mb-2">⛽</div>
-                  <p className="text-xs text-gray-400 mb-1">Gas Price</p>
-                  <p className="text-2xl font-bold text-orange-400">
-                    {metrics.onchain?.gas?.safe || '—'} <span className="text-sm">Gwei</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+                <motion.div whileHover={{ scale: 1.03 }} className="p-3 md:p-5 bg-gradient-to-br from-orange-900/20 to-purple-950/50 rounded-xl border border-orange-500/20">
+                  <div className="text-2xl md:text-3xl mb-1 md:mb-2">⛽</div>
+                  <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Gas Price</p>
+                  <p className="text-lg md:text-2xl font-bold text-orange-400">
+                    {metrics.onchain?.gas?.safe || '—'} <span className="text-xs md:text-sm">Gwei</span>
                   </p>
-                  <p className={`text-xs mt-1 ${metrics.onchain?.gas?.congestion === 'LOW' ? 'text-green-400' : metrics.onchain?.gas?.congestion === 'HIGH' ? 'text-red-400' : 'text-yellow-400'}`}>
+                  <p className={`text-[10px] md:text-xs mt-0.5 md:mt-1 ${metrics.onchain?.gas?.congestion === 'LOW' ? 'text-green-400' : metrics.onchain?.gas?.congestion === 'HIGH' ? 'text-red-400' : 'text-yellow-400'}`}>
                     {metrics.onchain?.gas?.congestion || 'UNKNOWN'}
                   </p>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-purple-900/20 to-purple-950/50 rounded-xl border border-purple-500/20">
-                  <div className="text-3xl mb-2">🐋</div>
-                  <p className="text-xs text-gray-400 mb-1">Whale Activity</p>
-                  <p className="text-2xl font-bold text-purple-400">
+                <motion.div whileHover={{ scale: 1.03 }} className="p-3 md:p-5 bg-gradient-to-br from-purple-900/20 to-purple-950/50 rounded-xl border border-purple-500/20">
+                  <div className="text-2xl md:text-3xl mb-1 md:mb-2">🐋</div>
+                  <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Whale Activity</p>
+                  <p className="text-lg md:text-2xl font-bold text-purple-400">
                     {metrics.onchain?.whales?.recentTransfers || 0}
                   </p>
-                  <p className={`text-xs mt-1 ${metrics.onchain?.whales?.signal === 'ACCUMULATION' ? 'text-green-400' : metrics.onchain?.whales?.signal === 'DISTRIBUTION' ? 'text-red-400' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] md:text-xs mt-0.5 md:mt-1 ${metrics.onchain?.whales?.signal === 'ACCUMULATION' ? 'text-green-400' : metrics.onchain?.whales?.signal === 'DISTRIBUTION' ? 'text-red-400' : 'text-gray-400'}`}>
                     {metrics.onchain?.whales?.signal || 'NEUTRAL'}
                   </p>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-blue-900/20 to-purple-950/50 rounded-xl border border-blue-500/20">
-                  <div className="text-3xl mb-2">🔗</div>
-                  <p className="text-xs text-gray-400 mb-1">Network Load</p>
-                  <p className="text-2xl font-bold text-blue-400">
+                <motion.div whileHover={{ scale: 1.03 }} className="p-3 md:p-5 bg-gradient-to-br from-blue-900/20 to-purple-950/50 rounded-xl border border-blue-500/20">
+                  <div className="text-2xl md:text-3xl mb-1 md:mb-2">🔗</div>
+                  <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Network Load</p>
+                  <p className="text-lg md:text-2xl font-bold text-blue-400">
                     {metrics.onchain?.network?.utilization || 0}%
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">
                     Block #{(metrics.onchain?.network?.blockNumber || 0).toLocaleString()}
                   </p>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.03 }} className="p-5 bg-gradient-to-br from-fuchsia-900/20 to-purple-950/50 rounded-xl border border-fuchsia-500/20">
-                  <div className="text-3xl mb-2">🎯</div>
-                  <p className="text-xs text-gray-400 mb-1">Alpha Score</p>
-                  <p className="text-2xl font-bold text-fuchsia-400">{metrics.alphaScore || 50}</p>
-                  <p className={`text-xs mt-1 font-bold ${getSignalColor(metrics.signal)}`}>
+                <motion.div whileHover={{ scale: 1.03 }} className="p-3 md:p-5 bg-gradient-to-br from-fuchsia-900/20 to-purple-950/50 rounded-xl border border-fuchsia-500/20">
+                  <div className="text-2xl md:text-3xl mb-1 md:mb-2">🎯</div>
+                  <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">Alpha Score</p>
+                  <p className="text-lg md:text-2xl font-bold text-fuchsia-400">{metrics.alphaScore || 50}</p>
+                  <p className={`text-[10px] md:text-xs mt-0.5 md:mt-1 font-bold ${getSignalColor(metrics.signal)}`}>
                     {metrics.signal || 'HOLD'}
                   </p>
                 </motion.div>
@@ -258,7 +256,7 @@ export default function Home() {
 
               {/* Macro Stats */}
               {metrics.macro && (
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 gap-2 md:gap-4">
                   {[
                     { label: 'Fear & Greed', value: metrics.macro.fng?.value || '—', sub: metrics.macro.fng?.classification, icon: metrics.macro.fng?.emoji || '😐' },
                     { label: 'BTC Dominance', value: `${metrics.macro.btcDom?.percentage || '—'}%`, sub: metrics.macro.btcDom?.trend, icon: '₿' },
@@ -270,14 +268,14 @@ export default function Home() {
                       subColor: parseFloat(metrics.macro.mcap?.change24h || 0) > 0 ? 'text-green-400' : 'text-red-400'
                     },
                   ].map((stat) => (
-                    <motion.div key={stat.label} whileHover={{ scale: 1.02 }} className="p-5 bg-purple-950/30 rounded-xl border border-purple-800/30">
+                    <motion.div key={stat.label} whileHover={{ scale: 1.02 }} className="p-3 md:p-5 bg-purple-950/30 rounded-xl border border-purple-800/30">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-                          <p className="text-3xl font-bold">{stat.value}</p>
-                          <p className={`text-xs mt-1 ${stat.subColor || 'text-gray-400'}`}>{stat.sub}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] md:text-xs text-gray-400 mb-0.5 md:mb-1">{stat.label}</p>
+                          <p className="text-xl md:text-3xl font-bold truncate">{stat.value}</p>
+                          <p className={`text-[10px] md:text-xs mt-0.5 md:mt-1 ${stat.subColor || 'text-gray-400'}`}>{stat.sub}</p>
                         </div>
-                        <div className="text-4xl">{stat.icon}</div>
+                        <div className="text-3xl md:text-4xl ml-2">{stat.icon}</div>
                       </div>
                     </motion.div>
                   ))}
@@ -293,15 +291,15 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-14"
+            className="mb-8 md:mb-14"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">🔥 Top On-Chain Coins</h2>
-              <Link href="/coins" className="text-sm text-purple-400 hover:text-purple-300 font-semibold transition-colors">
-                View all 20 →
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold">🔥 Top On-Chain Coins</h2>
+              <Link href="/coins" className="text-xs md:text-sm text-purple-400 hover:text-purple-300 font-semibold transition-colors">
+                View all →
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
               {coins.map((coin, i) => (
                 <Link key={coin.id} href={`/coin/${coin.id}`}>
                   <motion.div
@@ -309,28 +307,28 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     whileHover={{ scale: 1.04, y: -3 }}
-                    className="p-4 bg-purple-950/30 rounded-xl border border-purple-800/30 hover:border-purple-500/50 cursor-pointer transition-all"
+                    className="p-3 md:p-4 bg-purple-950/30 rounded-xl border border-purple-800/30 hover:border-purple-500/50 cursor-pointer transition-all"
                   >
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
                       <img
                         src={coin.image}
                         alt={coin.name}
-                        className="w-8 h-8 rounded-full"
+                        className="w-6 h-6 md:w-8 md:h-8 rounded-full"
                         onError={(e) => { e.target.style.display = 'none'; }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm">{coin.symbol}</p>
-                        <p className="text-xs text-gray-500 truncate">{coin.name}</p>
+                        <p className="font-bold text-xs md:text-sm">{coin.symbol}</p>
+                        <p className="text-[10px] md:text-xs text-gray-500 truncate">{coin.name}</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-center mb-1">{coin.sentiment}</p>
-                    <div className="w-full bg-gray-800 rounded-full h-1 mb-2">
+                    <p className="text-xl md:text-2xl font-bold text-center mb-1">{coin.sentiment}</p>
+                    <div className="w-full bg-gray-800 rounded-full h-1 mb-1 md:mb-2">
                       <div
                         className={`h-1 rounded-full ${coin.sentiment >= 60 ? 'bg-green-500' : coin.sentiment >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
                         style={{ width: `${coin.sentiment}%` }}
                       />
                     </div>
-                    <p className={`text-xs text-center ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <p className={`text-[10px] md:text-xs text-center ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}%
                     </p>
                   </motion.div>
@@ -345,36 +343,37 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.32 }}
+          className="mb-8 md:mb-14"
         >
           <NFTTrendingSection compact={true} />
         </motion.section>
 
-        {/* $PIPE Whitelist CTA */}
+        {/* $SENT Whitelist CTA */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
-          <div className="relative overflow-hidden p-8 md:p-12 bg-gradient-to-br from-purple-900/40 via-violet-900/30 to-fuchsia-900/30 rounded-2xl border border-purple-700/40">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-600/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden p-6 md:p-8 lg:p-12 bg-gradient-to-br from-purple-900/40 via-violet-900/30 to-fuchsia-900/30 rounded-2xl border border-purple-700/40">
+            <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-fuchsia-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 md:w-48 h-32 md:h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10 text-center">
-              <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-3xl md:text-4xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
-                $PIPE Token Launch Coming
+              <div className="text-4xl md:text-6xl mb-3 md:mb-4">🎯</div>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black mb-2 md:mb-3 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+                $SENT Token Launch Coming
               </h3>
-              <p className="text-gray-300 mb-4 max-w-2xl mx-auto">
-                Earn points on pepeline.com to secure your spot in the $PIPE whitelist.
+              <p className="text-sm md:text-base text-gray-300 mb-3 md:mb-4 max-w-2xl mx-auto px-2">
+                Earn points on pepeline.com to secure your spot in the $SENT whitelist.
                 Holders get premium access, airdrops, and DAO voting rights.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 mb-6 text-sm text-gray-400">
+              <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-4 md:mb-6 text-xs md:text-sm text-gray-400">
                 <span>✅ 100 pts → Whitelist</span>
-                <span>⚡ 250 pts → Priority Access</span>
-                <span>👑 500 pts → OG Member + NFT</span>
+                <span>⚡ 250 pts → Priority</span>
+                <span className="hidden sm:inline">👑 500 pts → OG + NFT</span>
               </div>
               <Link href="/whitelist"
-                className="inline-block px-10 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-black text-xl transition-all transform hover:scale-105 shadow-lg shadow-purple-900/40">
+                className="inline-block px-6 md:px-10 py-3 md:py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-black text-base md:text-xl transition-all transform active:scale-95 shadow-lg shadow-purple-900/40">
                 Start Earning Points →
               </Link>
             </div>
@@ -386,25 +385,25 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
-          <div className="bg-purple-950/20 rounded-2xl p-8 border border-purple-800/30">
-            <h2 className="text-3xl font-bold mb-4">What is Pepeline?</h2>
-            <p className="text-gray-300 mb-6">
+          <div className="bg-purple-950/20 rounded-2xl p-4 md:p-8 border border-purple-800/30">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">What is Pepeline?</h2>
+            <p className="text-sm md:text-base text-gray-300 mb-4 md:mb-6">
               Pepeline combines Gemini AI, Alchemy on-chain data, social signals,
               and macro indicators into a single 0-100 sentiment index for the crypto market.
             </p>
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
               {[
                 { icon: '⛓️', title: 'Alchemy On-Chain', desc: 'Gas, whale tracking, block data' },
                 { icon: '🤖', title: 'Gemini AI', desc: 'Smart market analysis & insights' },
                 { icon: '📊', title: 'Live Sentiment', desc: '0-100 index updated every 30s' },
                 { icon: '⚡', title: 'Telegram Alerts', desc: 'Instant notifications on extremes' },
               ].map((f) => (
-                <div key={f.title} className="text-center p-4 bg-purple-900/20 rounded-xl border border-purple-800/20">
-                  <div className="text-4xl mb-3">{f.icon}</div>
-                  <h3 className="font-bold mb-2 text-sm">{f.title}</h3>
-                  <p className="text-xs text-gray-400">{f.desc}</p>
+                <div key={f.title} className="text-center p-3 md:p-4 bg-purple-900/20 rounded-xl border border-purple-800/20">
+                  <div className="text-3xl md:text-4xl mb-2 md:mb-3">{f.icon}</div>
+                  <h3 className="font-bold mb-1 md:mb-2 text-xs md:text-sm">{f.title}</h3>
+                  <p className="text-[10px] md:text-xs text-gray-400">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -416,23 +415,23 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
-          <div className="p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-700/30 text-center">
-            <div className="text-6xl mb-4">🤖</div>
-            <h3 className="text-3xl font-bold mb-3">Never Miss a Market Move</h3>
-            <p className="text-gray-300 mb-6 max-w-xl mx-auto">
+          <div className="p-6 md:p-8 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl border border-blue-700/30 text-center">
+            <div className="text-4xl md:text-6xl mb-3 md:mb-4">🤖</div>
+            <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3">Never Miss a Market Move</h3>
+            <p className="text-sm md:text-base text-gray-300 mb-4 md:mb-6 max-w-xl mx-auto">
               Get instant Telegram alerts on whale movements, gas spikes, and extreme sentiment levels.
             </p>
             <a href="https://t.me/Pepelinebot" target="_blank" rel="noopener noreferrer"
-              className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-lg transition-all transform hover:scale-105">
+              className="inline-block px-6 md:px-8 py-3 md:py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-base md:text-lg transition-all transform active:scale-95">
               Start Bot - Free Forever
             </a>
-            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+            <div className="mt-3 md:mt-4 flex flex-wrap justify-center gap-2 md:gap-4 text-[10px] md:text-xs text-gray-500">
               <span>✅ Extreme Alerts</span>
               <span>✅ Whale Tracking</span>
               <span>✅ Gas Spikes</span>
-              <span>✅ Daily Summary</span>
+              <span className="hidden sm:inline">✅ Daily Summary</span>
             </div>
           </div>
         </motion.section>
@@ -442,7 +441,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
           <MarketBrief />
         </motion.section>
@@ -452,7 +451,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
           <Roadmap />
         </motion.section>
@@ -462,7 +461,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="mb-14"
+          className="mb-8 md:mb-14"
         >
           <SEOContent />
         </motion.section>
