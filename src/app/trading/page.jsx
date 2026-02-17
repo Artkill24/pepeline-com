@@ -10,28 +10,32 @@ import Footer from '@/components/Footer';
 export default function TradingPage() {
     const { publicKey, connected } = useWallet();
     const { setVisible } = useWalletModal();
-    const [signal, setSignal] = useState(null);
+    const [data, setData] = useState(null);
+    const [selectedCoin, setSelectedCoin] = useState('BTC');
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState(null);
 
     useEffect(() => {
-        fetchSignal();
-        const interval = setInterval(fetchSignal, 60000);
+        fetchSignals();
+        const interval = setInterval(fetchSignals, 60000);
         return () => clearInterval(interval);
     }, []);
 
-    const fetchSignal = async () => {
+    const fetchSignals = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/signals');
-            const data = await res.json();
-            setSignal(data);
+            const json = await res.json();
+            setData(json);
             setLastUpdate(new Date());
         } catch (err) {
             console.error(err);
         }
         setLoading(false);
     };
+
+    const signal = data?.signals?.find(s => s.symbol === selectedCoin);
+    const topSignal = data?.topSignal;
 
     const getSignalColor = (sig) => {
         if (sig === 'BUY') return 'text-green-400';
@@ -51,14 +55,18 @@ export default function TradingPage() {
         return 'bg-gray-900/50 text-gray-300 border-gray-500/50';
     };
 
-    const openJupiter = () => {
-        if (!signal) return;
-        const inputMint = signal.signal === 'BUY' 
-            ? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' // USDC
-            : 'So11111111111111111111111111111111111111112';  // SOL
-        const outputMint = signal.signal === 'BUY'
-            ? 'So11111111111111111111111111111111111111112'  // SOL
-            : 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // USDC
+    const openJupiter = (sym) => {
+        const mints = {
+            BTC: { symbol: 'WBTC', mint: '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh' },
+            ETH: { symbol: 'WETH', mint: '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs' },
+            SOL: { symbol: 'SOL', mint: 'So11111111111111111111111111111111111111112' }
+        };
+        const coin = mints[sym];
+        const usdc = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+        
+        const sig = data?.signals?.find(s => s.symbol === sym);
+        const inputMint = sig?.signal === 'BUY' ? usdc : coin.mint;
+        const outputMint = sig?.signal === 'BUY' ? coin.mint : usdc;
         
         window.open(`https://jup.ag/swap/${inputMint}-${outputMint}`, '_blank');
     };
@@ -66,7 +74,7 @@ export default function TradingPage() {
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
             <Header />
-            <div className="container mx-auto px-3 sm:px-4 py-6 md:py-12 max-w-5xl">
+            <div className="container mx-auto px-3 sm:px-4 py-6 md:py-12 max-w-6xl">
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-12">
                     <div className="text-4xl md:text-6xl mb-3 md:mb-4">🤖</div>
@@ -74,20 +82,20 @@ export default function TradingPage() {
                         AI Trading Signals
                     </h1>
                     <p className="text-sm md:text-xl text-gray-300">
-                        Hybrid strategy: Index + Whale Signals + Alpha
+                        Multi-coin • Technical Analysis • Risk Management
                     </p>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
                     className="mb-6 md:mb-8 p-3 md:p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-xl text-xs md:text-sm text-yellow-200">
-                    <p className="font-bold mb-1">⚠️ Important Disclaimer</p>
-                    <p>This is <b>NOT financial advice</b>. Signals are for informational purposes only. You control your wallet and approve every trade. Trading crypto involves risk of loss.</p>
+                    <p className="font-bold mb-1">⚠️ Disclaimer</p>
+                    <p>NOT financial advice. You control your wallet. Trading involves risk of loss.</p>
                 </motion.div>
 
                 {!connected && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         className="mb-6 md:mb-8 p-4 md:p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-2xl border border-purple-500/30 text-center">
-                        <p className="text-base md:text-lg mb-3 md:mb-4">Connect wallet to view live signals</p>
+                        <p className="text-base md:text-lg mb-3 md:mb-4">Connect wallet to trade</p>
                         <button onClick={() => setVisible(true)}
                             className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-sm md:text-base transition-all transform active:scale-95">
                             👛 Connect Phantom
@@ -95,114 +103,168 @@ export default function TradingPage() {
                     </motion.div>
                 )}
 
-                {connected && signal && (
+                {connected && data && (
                     <>
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                            className={`mb-6 md:mb-8 p-4 md:p-8 bg-gradient-to-br ${getSignalBg(signal.signal)} rounded-2xl border`}>
-                            
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-400 mb-1">Current Signal</p>
-                                    <p className={`text-4xl md:text-6xl font-bold ${getSignalColor(signal.signal)}`}>
-                                        {signal.signal}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2 md:gap-3">
-                                    <span className={`px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-xs md:text-sm font-bold border ${getConfidenceBadge(signal.confidence)}`}>
-                                        {signal.confidence}
-                                    </span>
-                                    <span className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-xs md:text-sm font-bold bg-purple-900/50 text-purple-300 border border-purple-500/50">
-                                        {signal.strength}/100
-                                    </span>
-                                </div>
-                            </div>
-
-                            {signal.signal !== 'HOLD' && (
-                                <>
-                                    <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4 md:mb-6">
-                                        <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
-                                            <p className="text-[10px] md:text-xs text-gray-400 mb-1">Suggested Allocation</p>
-                                            <p className="text-xl md:text-2xl font-bold">{signal.allocation}%</p>
-                                        </div>
-                                        <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
-                                            <p className="text-[10px] md:text-xs text-gray-400 mb-1">SOL Price</p>
-                                            <p className="text-xl md:text-2xl font-bold">${signal.price?.toFixed(2)}</p>
-                                        </div>
+                        {/* Top Signal Alert */}
+                        {topSignal && (
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                                className="mb-6 p-4 md:p-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/50 rounded-2xl">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs md:text-sm text-gray-300 mb-1">🔥 Strongest Signal</p>
+                                        <p className="text-2xl md:text-3xl font-bold">
+                                            {topSignal.symbol} {topSignal.signal} 
+                                            <span className="text-purple-400 ml-2">{topSignal.strength}/100</span>
+                                        </p>
                                     </div>
-
-                                    <button onClick={openJupiter}
-                                        className="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold text-sm md:text-base transition-all transform active:scale-95 mb-3">
-                                        {signal.signal === 'BUY' ? '🔵 Buy SOL on Jupiter' : '🔴 Sell SOL on Jupiter'}
+                                    <button onClick={() => { setSelectedCoin(topSignal.symbol); }}
+                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm transition-all">
+                                        View →
                                     </button>
-                                    <p className="text-[10px] md:text-xs text-gray-400 text-center">Opens Jupiter DEX • You approve every swap</p>
-                                </>
-                            )}
-
-                            {signal.signal === 'HOLD' && (
-                                <div className="text-center py-4 md:py-6">
-                                    <p className="text-base md:text-lg text-gray-300">No strong signal. Market conditions not optimal.</p>
-                                    <p className="text-xs md:text-sm text-gray-500 mt-2">Check back in a few hours.</p>
                                 </div>
-                            )}
-                        </motion.div>
+                            </motion.div>
+                        )}
 
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mb-6 md:mb-8">
-                            <div className="p-4 md:p-6 bg-gray-800 rounded-xl border border-gray-700">
-                                <h3 className="text-base md:text-lg font-bold mb-3 md:mb-4">🛡️ Conservative</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs md:text-sm text-gray-400">Signal</span>
-                                        <span className={`font-bold ${getSignalColor(signal.legs.conservative.signal)}`}>
-                                            {signal.legs.conservative.signal}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs md:text-sm text-gray-400">Strength</span>
-                                        <span className="font-bold">{signal.legs.conservative.strength}/100</span>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Coin Selector */}
+                        <div className="flex gap-2 md:gap-3 mb-6 md:mb-8">
+                            {data.signals.map(s => (
+                                <button key={s.symbol}
+                                    onClick={() => setSelectedCoin(s.symbol)}
+                                    className={`flex-1 p-3 md:p-4 rounded-xl border font-bold transition-all ${
+                                        selectedCoin === s.symbol 
+                                            ? 'bg-purple-900/50 border-purple-500' 
+                                            : 'bg-gray-800 border-gray-700 hover:border-gray-600'
+                                    }`}>
+                                    <p className="text-base md:text-lg">{s.symbol}</p>
+                                    <p className={`text-xs md:text-sm ${getSignalColor(s.signal)}`}>{s.signal}</p>
+                                    <p className="text-xs text-gray-500">{s.strength}/100</p>
+                                </button>
+                            ))}
+                        </div>
 
-                            <div className="p-4 md:p-6 bg-gray-800 rounded-xl border border-gray-700">
-                                <h3 className="text-base md:text-lg font-bold mb-3 md:mb-4">⚡ Aggressive</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs md:text-sm text-gray-400">Signal</span>
-                                        <span className={`font-bold ${getSignalColor(signal.legs.aggressive.signal)}`}>
-                                            {signal.legs.aggressive.signal}
-                                        </span>
+                        {/* Selected Coin Signal */}
+                        {signal && (
+                            <>
+                                <motion.div key={selectedCoin} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                                    className={`mb-6 md:mb-8 p-4 md:p-8 bg-gradient-to-br ${getSignalBg(signal.signal)} rounded-2xl border`}>
+                                    
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
+                                        <div>
+                                            <p className="text-xs md:text-sm text-gray-400 mb-1">{signal.symbol} Signal</p>
+                                            <p className={`text-4xl md:text-6xl font-bold ${getSignalColor(signal.signal)}`}>
+                                                {signal.signal}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold border ${getConfidenceBadge(signal.confidence)}`}>
+                                                {signal.confidence}
+                                            </span>
+                                            <span className="px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold bg-purple-900/50 text-purple-300 border border-purple-500/50">
+                                                {signal.strength}/100
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs md:text-sm text-gray-400">Strength</span>
-                                        <span className="font-bold">{signal.legs.aggressive.strength}/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
 
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                            className="mb-6 md:mb-8 p-4 md:p-6 bg-gray-800 rounded-xl border border-gray-700">
-                            <h3 className="text-base md:text-lg font-bold mb-3 md:mb-4">🧠 AI Reasoning</h3>
-                            <div className="space-y-1.5">
-                                {signal.reasoning.map((r, i) => (
-                                    <p key={i} className="text-xs md:text-sm text-gray-300">• {r}</p>
-                                ))}
-                            </div>
-                        </motion.div>
+                                    {signal.signal !== 'HOLD' && (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4">
+                                                <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
+                                                    <p className="text-[10px] md:text-xs text-gray-400">Allocation</p>
+                                                    <p className="text-xl md:text-2xl font-bold">{signal.allocation}%</p>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
+                                                    <p className="text-[10px] md:text-xs text-gray-400">Price</p>
+                                                    <p className="text-xl md:text-2xl font-bold">${signal.price.toFixed(2)}</p>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
+                                                    <p className="text-[10px] md:text-xs text-gray-400">Take Profit</p>
+                                                    <p className="text-xl md:text-2xl font-bold text-green-400">+{signal.takeProfit}%</p>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-gray-900/50 rounded-xl">
+                                                    <p className="text-[10px] md:text-xs text-gray-400">Stop Loss</p>
+                                                    <p className="text-xl md:text-2xl font-bold text-red-400">{signal.stopLoss}%</p>
+                                                </div>
+                                            </div>
+
+                                            <button onClick={() => openJupiter(signal.symbol)}
+                                                className="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold text-sm md:text-base transition-all transform active:scale-95 mb-2">
+                                                {signal.signal === 'BUY' ? '🔵 Buy on Jupiter' : '🔴 Sell on Jupiter'}
+                                            </button>
+                                            <p className="text-[10px] md:text-xs text-gray-400 text-center">Your keys, your coins</p>
+                                        </>
+                                    )}
+
+                                    {signal.signal === 'HOLD' && (
+                                        <div className="text-center py-4">
+                                            <p className="text-base text-gray-300">No strong signal for {signal.symbol}.</p>
+                                        </div>
+                                    )}
+                                </motion.div>
+
+                                {/* Technical Indicators */}
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    className="mb-6 p-4 md:p-6 bg-gray-800 rounded-xl border border-gray-700">
+                                    <h3 className="text-base md:text-lg font-bold mb-4">📊 Technical Indicators</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                            <p className="text-xs text-gray-400">RSI</p>
+                                            <p className="text-2xl font-bold">{signal.indicators.rsi}</p>
+                                            <p className="text-xs text-gray-500">{signal.indicators.trend}</p>
+                                        </div>
+                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                            <p className="text-xs text-gray-400">Volume</p>
+                                            <p className="text-2xl font-bold">{signal.indicators.volumeRatio}x</p>
+                                        </div>
+                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                            <p className="text-xs text-gray-400">Position</p>
+                                            <p className="text-2xl font-bold">{signal.indicators.pricePosition}%</p>
+                                        </div>
+                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                            <p className="text-xs text-gray-400">Index</p>
+                                            <p className="text-2xl font-bold">{signal.inputs.indexValue}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* 3 Legs */}
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                                    {Object.entries(signal.legs).map(([name, leg]) => (
+                                        <div key={name} className="p-4 bg-gray-800 rounded-xl border border-gray-700">
+                                            <h3 className="text-sm font-bold mb-2 capitalize">{name}</h3>
+                                            <div className="flex justify-between">
+                                                <span className={`font-bold ${getSignalColor(leg.signal)}`}>{leg.signal}</span>
+                                                <span className="font-bold">{leg.strength}/100</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </motion.div>
+
+                                {/* AI Reasoning */}
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    className="mb-6 p-4 md:p-6 bg-gray-800 rounded-xl border border-gray-700">
+                                    <h3 className="text-base md:text-lg font-bold mb-3">🧠 AI Reasoning</h3>
+                                    <div className="space-y-1.5">
+                                        {signal.reasoning.map((r, i) => (
+                                            <p key={i} className="text-xs md:text-sm text-gray-300">• {r}</p>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
 
                         {lastUpdate && (
                             <p className="text-xs text-center text-gray-500">
-                                Updated: {lastUpdate.toLocaleTimeString()} • Auto-refresh 60s
+                                Updated: {lastUpdate.toLocaleTimeString()} • Refresh 60s
                             </p>
                         )}
                     </>
                 )}
 
-                {connected && loading && !signal && (
+                {connected && loading && !data && (
                     <div className="text-center py-16">
                         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent" />
-                        <p className="mt-4 text-gray-400">Analyzing market...</p>
+                        <p className="mt-4 text-gray-400">Analyzing markets...</p>
                     </div>
                 )}
             </div>
