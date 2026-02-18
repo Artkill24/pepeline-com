@@ -1,59 +1,39 @@
 export const dynamic = 'force-dynamic';
 
-const SUPRA_BASE = 'https://prod-kline-rest.supra.com';
-const API_KEY    = process.env.SUPRA_API_KEY;
+const PAIRS = ['btc_usdt', 'eth_usdt', 'sol_usdt', 'bnb_usdt', 'xrp_usdt', 'doge_usdt', 'ada_usdt', 'avax_usdt', 'link_usdt', 'dot_usdt', 'matic_usdt', 'uni_usdt', 'atom_usdt', 'ltc_usdt', 'near_usdt'];
 
-// Le coppie che vuoi trackare in Pepeline
-const PAIRS = [
-    'btc_usdt', 'eth_usdt', 'sol_usdt', 'bnb_usdt',
-    'xrp_usdt', 'doge_usdt', 'ada_usdt', 'avax_usdt',
-    'link_usdt', 'matic_usdt',
-];
-
-async function fetchLatest(pair) {
+async function fetchSupra(pair) {
     try {
-        const res = await fetch(`${SUPRA_BASE}/latest?trading_pair=${pair}`, {
-            headers: { 'x-api-key': API_KEY },
-            next: { revalidate: 30 }, // cache 30s
+        const res = await fetch(`https://supra-api.onrender.com/api/price/${pair}`, {
+            headers: { 'X-API-Key': process.env.SUPRA_API_KEY },
+            next: { revalidate: 60 }
         });
         if (!res.ok) return null;
         const data = await res.json();
-        const inst  = data.instruments?.[0];
-        if (!inst) return null;
-
-        return {
-            pair,
-            symbol:    pair.split('_')[0].toUpperCase(),
-            price:     parseFloat(inst.currentPrice),
-            high24h:   parseFloat(inst['24h_high']),
-            low24h:    parseFloat(inst['24h_low']),
-            change24h: parseFloat(inst['24h_change']),
-            timestamp: inst.timestamp,
-        };
-    } catch (_) {
-        return null;
-    }
+        return { symbol: pair.split('_')[0].toUpperCase(), pair, ...data };
+    } catch { return null; }
 }
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const pair = searchParams.get('pair');
 
-    // Single pair
-    if (pair) {
-        const data = await fetchLatest(pair);
-        if (!data) return Response.json({ error: 'pair not found' }, { status: 404 });
-        return Response.json(data);
+    try {
+        if (pair) {
+            const data = await fetchSupra(pair);
+            return Response.json(data || { error: 'Not found' }, { status: data ? 200 : 404 });
+        }
+
+        const results = await Promise.all(PAIRS.map(fetchSupra));
+        const prices = results.filter(Boolean);
+
+        return Response.json({
+            prices,
+            total: prices.length,
+            timestamp: new Date().toISOString(),
+            source: 'supra'
+        });
+    } catch (error) {
+        return Response.json({ error: error.message }, { status: 500 });
     }
-
-    // All pairs in parallel
-    const results = await Promise.all(PAIRS.map(fetchLatest));
-    const prices  = results.filter(Boolean);
-
-    return Response.json({
-        source:    'supra',
-        count:     prices.length,
-        prices,
-        fetched_at: new Date().toISOString(),
-    });
 }

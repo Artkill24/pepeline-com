@@ -1,84 +1,109 @@
 export const dynamic = 'force-dynamic';
 
-function calculateRSI(prices, period = 14) {
-    if (!prices || prices.length < period + 1) return 50;
-    const changes = [];
-    for (let i = 1; i < prices.length; i++) changes.push(prices[i] - prices[i - 1]);
-    
-    let gains = 0, losses = 0;
-    for (let i = 0; i < period; i++) {
-        if (changes[i] > 0) gains += changes[i];
-        else losses += Math.abs(changes[i]);
-    }
-    
-    const avgGain = gains / period;
-    const avgLoss = losses / period;
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return Math.round((100 - (100 / (1 + rs))) * 10) / 10;
-}
+const COIN_PAIRS = {
+    BTC: 'btc_usdt', ETH: 'eth_usdt', SOL: 'sol_usdt', BNB: 'bnb_usdt',
+    XRP: 'xrp_usdt', DOGE: 'doge_usdt', ADA: 'ada_usdt', AVAX: 'avax_usdt',
+    LINK: 'link_usdt', MATIC: 'matic_usdt', DOT: 'dot_usdt', UNI: 'uni_usdt',
+    ATOM: 'atom_usdt', LTC: 'ltc_usdt', NEAR: 'near_usdt'
+};
 
 async function generateCoinSignal(symbol, baseUrl) {
-    const pair = { BTC: 'btc_usdt', ETH: 'eth_usdt', SOL: 'sol_usdt' }[symbol];
+    const pair = COIN_PAIRS[symbol];
+    if (!pair) return null;
     
     try {
         const [indexRes, metricsRes, priceRes] = await Promise.all([
-            fetch(`${baseUrl}/api/index`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/advanced-metrics`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/supra-prices?pair=${pair}`, { cache: 'no-store' })
+            fetch(`${baseUrl}/api/index`, { cache: 'no-store', signal: AbortSignal.timeout(8000) }),
+            fetch(`${baseUrl}/api/advanced-metrics`, { cache: 'no-store', signal: AbortSignal.timeout(8000) }),
+            fetch(`${baseUrl}/api/supra-prices?pair=${pair}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) })
         ]);
 
         const index = await indexRes.json();
         const metrics = await metricsRes.json();
         const priceData = await priceRes.json();
 
-        if (!index || !metrics || !priceData) return null;
+        if (!index?.index || !metrics || !priceData?.price) return null;
 
-        const indexValue = index.index || 50;
+        const indexValue = index.index;
         const whaleSignal = metrics?.onchain?.whales?.signal || 'NEUTRAL';
         const alphaScore = metrics?.alphaScore || 50;
-        const rsi = 50; // Simplified
         const volumeRatio = Math.abs(priceData.change24h || 0) * 2;
 
         let finalSignal = 'HOLD', finalStrength = 0, confidence = 'LOW';
 
-        // Simple logic
-        if (indexValue <= 25 && whaleSignal === 'ACCUMULATION') {
+        // Strong BUY conditions
+        if (indexValue <= 20 && whaleSignal === 'ACCUMULATION') {
+            finalSignal = 'BUY';
+            finalStrength = Math.round((20 - indexValue) * 4);
+            confidence = 'HIGH';
+        } else if (indexValue <= 25 && whaleSignal === 'ACCUMULATION') {
             finalSignal = 'BUY';
             finalStrength = Math.round((25 - indexValue) * 3);
             confidence = 'MEDIUM';
+        } else if (indexValue <= 30 && priceData.change24h < -8) {
+            finalSignal = 'BUY';
+            finalStrength = Math.round((30 - indexValue) * 2 + Math.abs(priceData.change24h));
+            confidence = 'MEDIUM';
+        } else if (indexValue <= 35 && priceData.change24h < -5) {
+            finalSignal = 'BUY';
+            finalStrength = Math.round((35 - indexValue) * 1.5);
+            confidence = 'LOW';
+        }
+        
+        // Strong SELL conditions
+        else if (indexValue >= 80 && whaleSignal === 'DISTRIBUTION') {
+            finalSignal = 'SELL';
+            finalStrength = Math.round((indexValue - 80) * 4);
+            confidence = 'HIGH';
         } else if (indexValue >= 75 && whaleSignal === 'DISTRIBUTION') {
             finalSignal = 'SELL';
             finalStrength = Math.round((indexValue - 75) * 3);
             confidence = 'MEDIUM';
+        } else if (indexValue >= 70 && priceData.change24h > 15) {
+            finalSignal = 'SELL';
+            finalStrength = Math.round((indexValue - 70) * 2 + priceData.change24h);
+            confidence = 'MEDIUM';
+        } else if (indexValue >= 65 && priceData.change24h > 10) {
+            finalSignal = 'SELL';
+            finalStrength = Math.round((indexValue - 65) * 1.5);
+            confidence = 'LOW';
         }
 
-        const allocation = confidence === 'HIGH' ? 60 : confidence === 'MEDIUM' ? 40 : 20;
+        const allocation = confidence === 'HIGH' ? 70 : confidence === 'MEDIUM' ? 50 : 25;
 
         return {
             symbol,
             signal: finalSignal,
-            strength: finalStrength,
+            strength: Math.min(100, finalStrength),
             confidence,
             allocation,
-            stopLoss: -4,
-            takeProfit: 10,
+            stopLoss: -5,
+            takeProfit: confidence === 'HIGH' ? 15 : 10,
             legs: {
                 conservative: { signal: finalSignal, strength: finalStrength },
                 aggressive: { signal: 'HOLD', strength: 0 },
                 technical: { signal: 'HOLD', strength: 0 }
             },
-            indicators: { rsi, volumeRatio: Math.round(volumeRatio * 10) / 10, pricePosition: 50, trend: 'NEUTRAL' },
-            inputs: { indexValue, level: index.level, whaleSignal, gasCongestion: 'LOW', alphaScore },
+            indicators: { 
+                rsi: 50, 
+                volumeRatio: Math.round(volumeRatio * 10) / 10, 
+                pricePosition: 50, 
+                trend: priceData.change24h > 5 ? 'BULLISH' : priceData.change24h < -5 ? 'BEARISH' : 'NEUTRAL' 
+            },
+            inputs: { indexValue: Math.round(indexValue * 10) / 10, level: index.level, whaleSignal, gasCongestion: 'LOW', alphaScore },
             price: priceData.price,
             high24h: priceData.high24h,
             low24h: priceData.low24h,
             change24h: priceData.change24h,
-            reasoning: [`Index ${indexValue} (${index.level})`, `Whales: ${whaleSignal}`],
+            reasoning: [
+                `Index ${Math.round(indexValue)} (${index.level})`,
+                `Whales: ${whaleSignal}`,
+                priceData.change24h ? `24h: ${priceData.change24h > 0 ? '+' : ''}${priceData.change24h.toFixed(1)}%` : ''
+            ].filter(Boolean),
             timestamp: new Date().toISOString()
         };
     } catch (err) {
-        console.error(`Error ${symbol}:`, err);
+        console.error(`Signal error ${symbol}:`, err.message);
         return null;
     }
 }
@@ -89,24 +114,26 @@ export async function GET(request) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
     try {
-        if (symbol && ['BTC', 'ETH', 'SOL'].includes(symbol)) {
+        const supportedCoins = Object.keys(COIN_PAIRS);
+        
+        if (symbol && supportedCoins.includes(symbol)) {
             const signal = await generateCoinSignal(symbol, baseUrl);
             return Response.json(signal || { error: 'Failed' }, { status: signal ? 200 : 500 });
         }
 
-        const [btc, eth, sol] = await Promise.all([
-            generateCoinSignal('BTC', baseUrl),
-            generateCoinSignal('ETH', baseUrl),
-            generateCoinSignal('SOL', baseUrl)
-        ]);
+        const allSignals = await Promise.all(
+            supportedCoins.map(coin => generateCoinSignal(coin, baseUrl))
+        );
 
-        const signals = [btc, eth, sol].filter(Boolean);
-        const strongSignals = signals.filter(s => s.strength >= 60 && s.signal !== 'HOLD');
+        const signals = allSignals.filter(Boolean);
+        const strongSignals = signals.filter(s => s.strength >= 55 && s.signal !== 'HOLD');
 
         return Response.json({
             signals,
             strongSignals: strongSignals.length,
-            topSignal: strongSignals[0] || null,
+            topSignal: strongSignals.length > 0 
+                ? strongSignals.sort((a, b) => b.strength - a.strength)[0]
+                : null,
             timestamp: new Date().toISOString()
         });
     } catch (error) {
