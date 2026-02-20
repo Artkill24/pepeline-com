@@ -12,7 +12,8 @@ export default function TradingPage() {
     const { setVisible } = useWalletModal();
     const [data, setData] = useState(null);
     const [selectedCoin, setSelectedCoin] = useState('BTC');
-    const [loading, setLoading] = useState(true);
+    const [amount, setAmount] = useState(100);
+    const [executing, setExecuting] = useState(false);
 
     useEffect(() => {
         fetchSignals();
@@ -21,7 +22,6 @@ export default function TradingPage() {
     }, []);
 
     const fetchSignals = async () => {
-        setLoading(true);
         try {
             const res = await fetch('/api/signals');
             const json = await res.json();
@@ -29,55 +29,52 @@ export default function TradingPage() {
         } catch (err) {
             console.error(err);
         }
-        setLoading(false);
+    };
+
+    const executeQuickTrade = async (signal) => {
+        setExecuting(true);
+        try {
+            const res = await fetch('/api/execute-trade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ signal, symbol: selectedCoin, amount })
+            });
+            
+            const result = await res.json();
+            if (result.jupiterUrl) {
+                window.open(result.jupiterUrl, '_blank');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        setExecuting(false);
     };
 
     const signal = data?.signals?.find(s => s.symbol === selectedCoin);
-    const topSignal = data?.topSignal;
-
-    const getSignalColor = (sig) => {
-        if (sig === 'BUY') return 'text-green-400';
-        if (sig === 'SELL') return 'text-red-400';
-        return 'text-gray-400';
-    };
-
-    const getSignalBg = (sig) => {
-        if (sig === 'BUY') return 'from-green-900/40 to-green-800/20 border-green-500/30';
-        if (sig === 'SELL') return 'from-red-900/40 to-red-800/20 border-red-500/30';
-        return 'from-gray-900/40 to-gray-800/20 border-gray-500/30';
-    };
-
-    const openJupiter = () => {
-        window.open('https://jup.ag', '_blank');
-    };
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
             <Header />
-            <div className="container mx-auto px-3 sm:px-4 py-6 md:py-12 max-w-7xl">
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-12">
-                    <div className="text-4xl md:text-6xl mb-3">🤖</div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+            <div className="container mx-auto px-4 py-12 max-w-6xl">
+                
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
+                    <div className="text-6xl mb-4">🤖</div>
+                    <h1 className="text-5xl font-extrabold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
                         AI Trading Signals
                     </h1>
-                    <p className="text-sm md:text-xl text-gray-300">
-                        Multi-coin • Hybrid Strategy • Risk Management
-                    </p>
+                    <p className="text-xl text-gray-300">One-Click Execution • Non-Custodial • Jupiter DEX</p>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
-                    className="mb-6 p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-xl text-xs md:text-sm text-yellow-200">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-xl text-sm text-yellow-200">
                     <p className="font-bold mb-1">⚠️ Disclaimer</p>
-                    <p>NOT financial advice. Trading involves risk. You control your wallet.</p>
+                    <p>NOT financial advice. You control your wallet and approve every trade. Trading involves risk of loss.</p>
                 </motion.div>
 
                 {!connected && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className="mb-6 p-4 md:p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-2xl border border-purple-500/30 text-center">
-                        <p className="text-base md:text-lg mb-3">Connect wallet to trade</p>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-2xl border border-purple-500/30 text-center">
+                        <p className="text-lg mb-4">Connect wallet for one-click trading</p>
                         <button onClick={() => setVisible(true)}
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold transition-all">
+                            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold transition-all">
                             👛 Connect Phantom
                         </button>
                     </motion.div>
@@ -85,93 +82,95 @@ export default function TradingPage() {
 
                 {connected && data && (
                     <>
-                        {topSignal && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="mb-6 p-4 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/50 rounded-2xl">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-gray-300 mb-1">🔥 Strongest Signal</p>
-                                        <p className="text-2xl font-bold">
-                                            {topSignal.symbol} {topSignal.signal} 
-                                            <span className="text-purple-400 ml-2">{topSignal.strength}/100</span>
-                                        </p>
-                                    </div>
-                                    <button onClick={() => setSelectedCoin(topSignal.symbol)}
-                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm">
-                                        View →
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2 mb-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-8">
                             {data.signals.map(s => (
                                 <button key={s.symbol}
                                     onClick={() => setSelectedCoin(s.symbol)}
-                                    className={`p-2 rounded-lg border font-bold transition-all ${
+                                    className={`p-3 rounded-xl border font-bold transition-all ${
                                         selectedCoin === s.symbol 
                                             ? 'bg-purple-900/50 border-purple-500' 
                                             : 'bg-gray-800 border-gray-700 hover:border-gray-600'
                                     }`}>
-                                    <p className="text-sm">{s.symbol}</p>
-                                    <p className={`text-xs ${getSignalColor(s.signal)}`}>{s.signal}</p>
+                                    <p className="text-base">{s.symbol}</p>
+                                    <p className={`text-xs ${s.signal === 'BUY' ? 'text-green-400' : s.signal === 'SELL' ? 'text-red-400' : 'text-gray-400'}`}>
+                                        {s.signal}
+                                    </p>
                                 </button>
                             ))}
                         </div>
 
                         {signal && (
-                            <motion.div key={selectedCoin} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className={`mb-6 p-4 md:p-6 bg-gradient-to-br ${getSignalBg(signal.signal)} rounded-2xl border`}>
+                            <motion.div key={selectedCoin} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                                 
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <p className="text-xs text-gray-400">{signal.symbol} Signal</p>
-                                        <p className={`text-4xl font-bold ${getSignalColor(signal.signal)}`}>
-                                            {signal.signal}
-                                        </p>
+                                <div className={`p-6 rounded-2xl border ${
+                                    signal.signal === 'BUY' ? 'bg-green-900/20 border-green-500/30' :
+                                    signal.signal === 'SELL' ? 'bg-red-900/20 border-red-500/30' :
+                                    'bg-gray-800 border-gray-700'
+                                }`}>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div>
+                                            <p className="text-sm text-gray-400">{signal.symbol} Signal</p>
+                                            <p className={`text-5xl font-bold ${
+                                                signal.signal === 'BUY' ? 'text-green-400' :
+                                                signal.signal === 'SELL' ? 'text-red-400' : 'text-gray-400'
+                                            }`}>{signal.signal}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm text-gray-400">Strength</p>
+                                            <p className="text-4xl font-bold text-purple-400">{signal.strength}/100</p>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-400">Strength</p>
-                                        <p className="text-3xl font-bold text-purple-300">{signal.strength}/100</p>
-                                        <p className="text-xs text-gray-500">{signal.confidence}</p>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-4">
+                                        <div className="p-3 bg-gray-900/50 rounded-xl">
+                                            <p className="text-xs text-gray-400">Price</p>
+                                            <p className="text-xl font-bold">${signal.price.toFixed(2)}</p>
+                                        </div>
+                                        <div className="p-3 bg-gray-900/50 rounded-xl">
+                                            <p className="text-xs text-gray-400">24h</p>
+                                            <p className={`text-xl font-bold ${signal.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {signal.change24h >= 0 ? '+' : ''}{signal.change24h.toFixed(2)}%
+                                            </p>
+                                        </div>
                                     </div>
+
+                                    {signal.signal !== 'HOLD' && (
+                                        <>
+                                            <div className="mb-4">
+                                                <label className="block text-sm text-gray-400 mb-2">Trade Amount (USDC)</label>
+                                                <input
+                                                    type="number"
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(parseFloat(e.target.value))}
+                                                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    min="10"
+                                                    max="10000"
+                                                    step="10"
+                                                />
+                                            </div>
+
+                                            <button
+                                                onClick={() => executeQuickTrade(signal.signal)}
+                                                disabled={executing}
+                                                className="w-full py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold transition-all disabled:opacity-50">
+                                                {executing ? '⏳ Preparing...' : `⚡ ${signal.signal} ${signal.symbol} on Jupiter`}
+                                            </button>
+                                            <p className="text-xs text-gray-500 text-center mt-2">Your wallet, your approval required</p>
+                                        </>
+                                    )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 mb-4">
-                                    <div className="p-2 bg-gray-900/50 rounded-lg">
-                                        <p className="text-xs text-gray-400">Price</p>
-                                        <p className="text-xl font-bold">${signal.price.toFixed(2)}</p>
+                                <div className="p-4 bg-gray-800 rounded-xl">
+                                    <h3 className="font-bold mb-2">🧠 AI Reasoning</h3>
+                                    <div className="space-y-1 text-sm text-gray-300">
+                                        {signal.reasoning.map((r, i) => (
+                                            <p key={i}>• {r}</p>
+                                        ))}
                                     </div>
-                                    <div className="p-2 bg-gray-900/50 rounded-lg">
-                                        <p className="text-xs text-gray-400">24h Change</p>
-                                        <p className={`text-xl font-bold ${signal.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {signal.change24h >= 0 ? '+' : ''}{signal.change24h.toFixed(2)}%
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {signal.signal !== 'HOLD' && (
-                                    <button onClick={openJupiter}
-                                        className="w-full py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold transition-all">
-                                        Trade on Jupiter →
-                                    </button>
-                                )}
-
-                                <div className="mt-4 text-xs text-gray-400">
-                                    {signal.reasoning.map((r, i) => (
-                                        <p key={i}>• {r}</p>
-                                    ))}
                                 </div>
                             </motion.div>
                         )}
                     </>
-                )}
-
-                {loading && (
-                    <div className="text-center py-16">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent" />
-                        <p className="mt-4 text-gray-400">Analyzing {data?.signals?.length || 9} coins...</p>
-                    </div>
                 )}
             </div>
             <Footer />

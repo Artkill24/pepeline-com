@@ -14,6 +14,8 @@ export default function Header() {
                 <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">🎯 Dashboard</Link>
                 <Link href="/backtest" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">📈 Backtest</Link>
                 <Link href="/trading" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">🤖 Trading</Link>
+                <Link href="/ai-predictor" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">🤖 AI Predictor</Link>
+                <Link href="/war-room" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">⚔️ War Room</Link>
                 <Link href="/prices" className="text-gray-300 hover:text-white transition-colors text-sm xl:text-base">💰 Prices</Link>
                 <Link href="/whitelist"
                     className="px-3 xl:px-4 py-1.5 xl:py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-lg font-bold text-sm transition-all">
