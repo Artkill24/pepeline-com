@@ -1,254 +1,361 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
-const SENTIMENT_CONFIG = {
-    'BULLISH':          { color: '#22c55e', bg: 'from-green-900/30 to-green-950/50',   border: 'border-green-500/30',   emoji: '🚀' },
-    'SLIGHTLY BULLISH': { color: '#3b82f6', bg: 'from-blue-900/30 to-blue-950/50',    border: 'border-blue-500/30',    emoji: '📈' },
-    'NEUTRAL':          { color: '#eab308', bg: 'from-yellow-900/30 to-yellow-950/50', border: 'border-yellow-500/30',  emoji: '😐' },
-    'SLIGHTLY BEARISH': { color: '#f97316', bg: 'from-orange-900/30 to-orange-950/50', border: 'border-orange-500/30',  emoji: '📉' },
-    'BEARISH':          { color: '#ef4444', bg: 'from-red-900/30 to-red-950/50',       border: 'border-red-500/30',     emoji: '🐻' },
-};
-
-function formatPrice(price) {
-    if (!price || price === 0) return '$—';
-    if (price < 0.0001) return `$${price.toFixed(8)}`;
-    if (price < 0.01)   return `$${price.toFixed(6)}`;
-    if (price < 1)      return `$${price.toFixed(4)}`;
-    if (price < 1000)   return `$${price.toFixed(2)}`;
-    return `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-}
-
-function formatLarge(n) {
-    if (!n || n === 0) return '—';
-    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-    if (n >= 1e9)  return `$${(n / 1e9).toFixed(2)}B`;
-    if (n >= 1e6)  return `$${(n / 1e6).toFixed(2)}M`;
-    return `$${n.toLocaleString()}`;
-}
-
-function PriceFlash({ direction, children }) {
-    return (
-        <motion.span
-            key={direction}
-            initial={{ backgroundColor: direction === 'up' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)' }}
-            animate={{ backgroundColor: 'transparent' }}
-            transition={{ duration: 1.5 }}
-            className="rounded px-1"
-        >
-            {children}
-        </motion.span>
-    );
-}
-
-export default function CoinPage({ params }) {
+export default function CoinDetailPage({ params }) {
     const [coin, setCoin] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [countdown, setCountdown] = useState(5);
-    const [priceDir, setPriceDir] = useState(null);
-    const prevPriceRef = useRef(null);
+    const [chartPeriod, setChartPeriod] = useState('7d');
+    const [showFullDescription, setShowFullDescription] = useState(false);
+
+    useEffect(() => {
+        fetchCoin();
+    }, [params.id]);
 
     const fetchCoin = async () => {
         try {
             const res = await fetch(`/api/coin/${params.id}`);
             const data = await res.json();
-            if (data.error) { setError(data.error); return; }
-
-            if (prevPriceRef.current && data.price) {
-                const dir = data.price > prevPriceRef.current ? 'up' : data.price < prevPriceRef.current ? 'down' : null;
-                if (dir) { setPriceDir(dir); setTimeout(() => setPriceDir(null), 2000); }
-            }
-            prevPriceRef.current = data.price;
-            setCoin(data);
-            setCountdown(5);
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
+            setCoin(data.coin);
+        } catch (err) {
+            console.error(err);
         }
+        setLoading(false);
     };
 
-    useEffect(() => {
-        fetchCoin();
-        const interval = setInterval(fetchCoin, 5000);
-        const cdInterval = setInterval(() => setCountdown(c => c > 0 ? c - 1 : 5), 1000);
-        return () => { clearInterval(interval); clearInterval(cdInterval); };
-    }, [params.id]);
+    const formatNumber = (num) => {
+        if (!num) return '—';
+        if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+        if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+        if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+        if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+        return `$${num.toFixed(2)}`;
+    };
 
-    const cfg = SENTIMENT_CONFIG[coin?.sentimentLevel] || SENTIMENT_CONFIG['NEUTRAL'];
+    const formatPrice = (price) => {
+        if (!price) return '$0.00';
+        if (price >= 1) return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (price >= 0.01) return `$${price.toFixed(4)}`;
+        return `$${price.toFixed(8)}`;
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const PriceChart = ({ data }) => {
+        if (!data || data.length === 0) return null;
+
+        const prices = data.map(p => p[1]);
+        const max = Math.max(...prices);
+        const min = Math.min(...prices);
+        const range = max - min;
+
+        const points = prices.map((price, i) => {
+            const x = (i / (prices.length - 1)) * 100;
+            const y = 100 - (((price - min) / range) * 100);
+            return `${x},${y}`;
+        }).join(' ');
+
+        const color = prices[prices.length - 1] > prices[0] ? '#10b981' : '#ef4444';
+        const fillColor = prices[prices.length - 1] > prices[0] ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+        return (
+            <svg viewBox="0 0 100 100" className="w-full h-64" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.3 }} />
+                        <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
+                    </linearGradient>
+                </defs>
+                <polyline
+                    points={`0,100 ${points} 100,100`}
+                    fill="url(#gradient)"
+                />
+                <polyline
+                    points={points}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="0.5"
+                />
+            </svg>
+        );
+    };
+
+    if (loading) {
+        return (
+            <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+                <Header />
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent" />
+                </div>
+                <Footer />
+            </main>
+        );
+    }
+
+    if (!coin) {
+        return (
+            <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+                <Header />
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <p className="text-2xl text-gray-400">Coin not found</p>
+                    <Link href="/coins" className="text-blue-400 hover:underline mt-4 inline-block">← Back to coins</Link>
+                </div>
+                <Footer />
+            </main>
+        );
+    }
 
     return (
-        <main className="min-h-screen bg-[#0a0a14] text-white">
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-700/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl" />
-            </div>
-
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
             <Header />
-
-            <div className="container mx-auto px-4 py-8 relative z-10 max-w-4xl">
-
-                {/* Back */}
-                <Link href="/coins" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 mb-6 transition-colors text-sm">
-                    ← Back to Coins
-                </Link>
-
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center h-64 gap-2 md:gap-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
-                        <p className="text-gray-400 text-sm">Loading on-chain data...</p>
+            <div className="container mx-auto px-4 py-12 max-w-7xl">
+                
+                {/* Header */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                    <Link href="/coins" className="text-blue-400 hover:underline mb-4 inline-block">← Back to coins</Link>
+                    
+                    <div className="flex items-center gap-4 mb-6">
+                        <Image src={coin.image} alt={coin.name} width={64} height={64} className="rounded-full" />
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-extrabold">{coin.name}</h1>
+                            <p className="text-xl text-gray-400">{coin.symbol} • Rank #{coin.market_cap_rank}</p>
+                        </div>
                     </div>
-                ) : error ? (
-                    <div className="text-center py-20">
-                        <div className="text-4xl md:text-6xl mb-4">❌</div>
-                        <p className="text-red-400 mb-2">{error}</p>
-                        <Link href="/coins" className="text-purple-400 hover:underline">← Go back</Link>
-                    </div>
-                ) : coin ? (
-                    <AnimatePresence>
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
-                            {/* Header Card */}
-                            <div className={`p-3 md:p-6 rounded-2xl bg-gradient-to-br ${cfg.bg} border ${cfg.border} mb-6`}>
-                                <div className="flex items-center justify-between flex-wrap gap-2 md:gap-4">
-                                    <div className="flex items-center gap-2 md:gap-4">
-                                        <img
-                                            src={coin.image}
-                                            alt={coin.name}
-                                            className="w-16 h-16 rounded-full shadow-lg"
-                                            onError={e => e.target.style.display = 'none'}
-                                        />
-                                        <div>
-                                            <h1 className="text-3xl font-black">{coin.name}</h1>
-                                            <p className="text-gray-400 text-sm">{coin.symbol} · Ethereum Mainnet</p>
-                                            {coin.address && (
-                                                <p className="text-xs text-gray-600 mt-1 font-mono">
-                                                    {coin.address.slice(0, 10)}...{coin.address.slice(-6)}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <PriceFlash direction={priceDir}>
-                                            <p className="text-2xl md:text-4xl font-black">{formatPrice(coin.price)}</p>
-                                        </PriceFlash>
-                                        <p className={`text-lg font-bold ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {coin.change24h >= 0 ? '▲' : '▼'} {Math.abs(coin.change24h || 0).toFixed(2)}% (24h)
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">Refreshes in {countdown}s</p>
-                                    </div>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div>
+                            <p className="text-5xl font-extrabold">{formatPrice(coin.current_price)}</p>
+                            <p className={`text-xl font-bold ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {coin.price_change_percentage_24h >= 0 ? '+' : ''}{coin.price_change_percentage_24h?.toFixed(2)}% (24h)
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Chart */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                    className="mb-8 p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                    
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold">Price Chart</h2>
+                        <div className="flex gap-2">
+                            {['7d', '30d', '90d', '1y'].map(period => (
+                                <button
+                                    key={period}
+                                    onClick={() => setChartPeriod(period)}
+                                    className={`px-3 py-1 rounded-lg text-sm transition-all ${
+                                        chartPeriod === period ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
+                                    }`}>
+                                    {period}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <PriceChart data={coin.price_history} />
+                </motion.div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Left Column - Stats */}
+                    <div className="lg:col-span-2 space-y-6">
+                        
+                        {/* Market Stats */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <h2 className="text-2xl font-bold mb-4">Market Stats</h2>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm text-gray-400">Market Cap</p>
+                                    <p className="text-xl font-bold">{formatNumber(coin.market_cap)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-400">24h Volume</p>
+                                    <p className="text-xl font-bold">{formatNumber(coin.total_volume)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-400">Circulating Supply</p>
+                                    <p className="text-xl font-bold">{coin.circulating_supply?.toLocaleString()} {coin.symbol}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-400">Max Supply</p>
+                                    <p className="text-xl font-bold">
+                                        {coin.max_supply ? coin.max_supply.toLocaleString() : '∞'} {coin.symbol}
+                                    </p>
                                 </div>
                             </div>
+                        </motion.div>
 
-                            {/* Sentiment + On-Chain Row */}
-                            <div className="grid md:grid-cols-2 gap-2 md:gap-4 mb-6">
-
-                                {/* Sentiment */}
-                                <div className={`p-5 rounded-xl bg-gradient-to-br ${cfg.bg} border ${cfg.border}`}>
-                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Pepeline Sentiment</p>
-                                    <div className="flex items-center gap-2 md:gap-4">
-                                        <div className="relative">
-                                            <svg width="80" height="80" className="-rotate-90">
-                                                <circle cx="40" cy="40" r="32" fill="none" stroke="#1e1b4b" strokeWidth="8" />
-                                                <circle
-                                                    cx="40" cy="40" r="32" fill="none"
-                                                    stroke={cfg.color}
-                                                    strokeWidth="8"
-                                                    strokeLinecap="round"
-                                                    strokeDasharray={2 * Math.PI * 32}
-                                                    strokeDashoffset={2 * Math.PI * 32 * (1 - (coin.sentiment || 50) / 100)}
-                                                    style={{ transition: 'stroke-dashoffset 1s ease' }}
-                                                />
-                                            </svg>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-xl font-black" style={{ color: cfg.color }}>{coin.sentiment}</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-black" style={{ color: cfg.color }}>{cfg.emoji} {coin.sentimentLevel}</p>
-                                            <p className="text-xs text-gray-400 mt-1">Score 0-100</p>
-                                            <div className="mt-2 w-full bg-gray-800 rounded-full h-1.5">
-                                                <div className="h-1.5 rounded-full transition-all duration-1000" style={{ width: `${coin.sentiment}%`, backgroundColor: cfg.color }} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* On-Chain Stats */}
-                                <div className="p-5 rounded-xl bg-purple-950/30 border border-purple-800/30">
-                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">⛓️ On-Chain Data (Alchemy)</p>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-400">Transfers (recent)</span>
-                                            <span className="font-bold text-purple-300">{coin.onChain?.transfers24h || 0}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-400">Unique Addresses</span>
-                                            <span className="font-bold text-purple-300">{coin.onChain?.uniqueAddresses || 0}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-400">Large Transfers 🐋</span>
-                                            <span className={`font-bold ${(coin.onChain?.largeTransfers || 0) > 3 ? 'text-orange-400' : 'text-gray-300'}`}>
-                                                {coin.onChain?.largeTransfers || 0}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-400">Gas Price</span>
-                                            <span className="font-bold text-orange-300">{coin.onChain?.gasPrice || '—'} Gwei</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Market Stats */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                        {/* Price Performance */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <h2 className="text-2xl font-bold mb-4">Price Performance</h2>
+                            
+                            <div className="space-y-3">
                                 {[
-                                    { label: 'Price', value: formatPrice(coin.price), icon: '💲' },
-                                    { label: '24h Change', value: `${coin.change24h >= 0 ? '+' : ''}${(coin.change24h || 0).toFixed(2)}%`, icon: '📊', color: coin.change24h >= 0 ? 'text-green-400' : 'text-red-400' },
-                                    { label: 'Market Cap', value: formatLarge(coin.marketCap), icon: '💰' },
-                                    { label: '24h Volume', value: formatLarge(coin.volume24h), icon: '📈' },
-                                ].map(stat => (
-                                    <motion.div key={stat.label} whileHover={{ scale: 1.03 }} className="p-4 bg-purple-950/30 rounded-xl border border-purple-800/30 text-center">
-                                        <p className="text-2xl mb-1">{stat.icon}</p>
-                                        <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-                                        <p className={`font-bold text-sm ${stat.color || 'text-white'}`}>{stat.value || '—'}</p>
-                                    </motion.div>
+                                    { label: '24h', value: coin.price_change_percentage_24h },
+                                    { label: '7d', value: coin.price_change_percentage_7d },
+                                    { label: '30d', value: coin.price_change_percentage_30d },
+                                    { label: '1y', value: coin.price_change_percentage_1y }
+                                ].map(({ label, value }) => (
+                                    <div key={label} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl">
+                                        <span className="text-gray-400">{label}</span>
+                                        <span className={`font-bold ${value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {value >= 0 ? '+' : ''}{value?.toFixed(2)}%
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
-
-                            {/* AI Commentary */}
-                            {coin.commentary && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="p-5 bg-gradient-to-r from-violet-900/20 to-purple-900/20 rounded-xl border border-purple-700/30 mb-6"
-                                >
-                                    <p className="text-xs text-purple-400 uppercase tracking-widest mb-2">🤖 Gemini AI Analysis</p>
-                                    <p className="text-gray-200 text-sm leading-relaxed">{coin.commentary}</p>
-                                </motion.div>
-                            )}
-
-                            {/* Data Source Badge */}
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                                <span>⛓️ Data: Alchemy Ethereum Mainnet + CoinGecko</span>
-                                <span>Updated: {new Date(coin.timestamp).toLocaleTimeString()}</span>
-                            </div>
-
-                            {/* Back to coins */}
-                            <div className="mt-8 text-center">
-                                <Link href="/coins"
-                                    className="px-6 py-3 bg-purple-900/40 hover:bg-purple-800/40 border border-purple-700/30 rounded-xl text-sm font-semibold transition-all">
-                                    ← View All Coins
-                                </Link>
-                            </div>
-
                         </motion.div>
-                    </AnimatePresence>
-                ) : null}
+
+                        {/* ATH/ATL */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <h2 className="text-2xl font-bold mb-4">All-Time Highs & Lows</h2>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-green-900/20 border border-green-500/30 rounded-xl">
+                                    <p className="text-sm text-gray-400 mb-1">All-Time High</p>
+                                    <p className="text-2xl font-bold text-green-400">{formatPrice(coin.ath)}</p>
+                                    <p className="text-xs text-gray-400">{formatDate(coin.ath_date)}</p>
+                                    <p className="text-sm font-bold text-red-400 mt-2">
+                                        {coin.ath_change_percentage?.toFixed(1)}% from ATH
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-xl">
+                                    <p className="text-sm text-gray-400 mb-1">All-Time Low</p>
+                                    <p className="text-2xl font-bold text-red-400">{formatPrice(coin.atl)}</p>
+                                    <p className="text-xs text-gray-400">{formatDate(coin.atl_date)}</p>
+                                    <p className="text-sm font-bold text-green-400 mt-2">
+                                        +{coin.atl_change_percentage?.toFixed(0)}% from ATL
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Description */}
+                        {coin.description && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">About {coin.name}</h2>
+                                <div 
+                                    className={`text-gray-300 prose prose-invert max-w-none ${!showFullDescription && 'line-clamp-4'}`}
+                                    dangerouslySetInnerHTML={{ __html: coin.description }}
+                                />
+                                {coin.description.length > 300 && (
+                                    <button
+                                        onClick={() => setShowFullDescription(!showFullDescription)}
+                                        className="text-blue-400 hover:underline mt-2">
+                                        {showFullDescription ? 'Show less' : 'Read more'}
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Links & Community */}
+                    <div className="space-y-6">
+                        
+                        {/* Links */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <h2 className="text-xl font-bold mb-4">Links</h2>
+                            
+                            <div className="space-y-3">
+                                {coin.homepage && (
+                                    <a href={coin.homepage} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        🌐 <span>Website</span>
+                                    </a>
+                                )}
+                                {coin.blockchain_site && (
+                                    <a href={coin.blockchain_site} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        🔗 <span>Explorer</span>
+                                    </a>
+                                )}
+                                {coin.twitter_screen_name && (
+                                    <a href={`https://twitter.com/${coin.twitter_screen_name}`} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        𝕏 <span>Twitter</span>
+                                    </a>
+                                )}
+                                {coin.telegram_channel_identifier && (
+                                    <a href={`https://t.me/${coin.telegram_channel_identifier}`} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        ✈️ <span>Telegram</span>
+                                    </a>
+                                )}
+                                {coin.subreddit_url && (
+                                    <a href={coin.subreddit_url} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        🔴 <span>Reddit</span>
+                                    </a>
+                                )}
+                                {coin.repos_url && (
+                                    <a href={coin.repos_url} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 bg-gray-900/50 hover:bg-gray-900 rounded-xl transition-all">
+                                        💻 <span>GitHub</span>
+                                    </a>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Community */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                            className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                            <h2 className="text-xl font-bold mb-4">Community</h2>
+                            
+                            <div className="space-y-3">
+                                {coin.community.twitter_followers && (
+                                    <div className="flex justify-between p-3 bg-gray-900/50 rounded-xl">
+                                        <span className="text-gray-400">Twitter</span>
+                                        <span className="font-bold">{coin.community.twitter_followers.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {coin.community.reddit_subscribers && (
+                                    <div className="flex justify-between p-3 bg-gray-900/50 rounded-xl">
+                                        <span className="text-gray-400">Reddit</span>
+                                        <span className="font-bold">{coin.community.reddit_subscribers.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {coin.community.telegram_channel_user_count && (
+                                    <div className="flex justify-between p-3 bg-gray-900/50 rounded-xl">
+                                        <span className="text-gray-400">Telegram</span>
+                                        <span className="font-bold">{coin.community.telegram_channel_user_count.toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Categories */}
+                        {coin.categories && coin.categories.length > 0 && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                                className="p-6 bg-gray-800 rounded-2xl border border-gray-700">
+                                <h2 className="text-xl font-bold mb-4">Categories</h2>
+                                <div className="flex flex-wrap gap-2">
+                                    {coin.categories.map((cat, i) => (
+                                        <span key={i} className="px-3 py-1 bg-blue-900/50 text-blue-300 rounded-lg text-sm">
+                                            {cat}
+                                        </span>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
             </div>
+            <Footer />
         </main>
     );
 }
