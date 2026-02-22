@@ -5,6 +5,7 @@ import SolanaWalletProvider from '@/components/WalletProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://pepeline.com"),
     title: 'Pepeline - Real-time Crypto Sentiment Index',
     description: 'Track cryptocurrency market sentiment with AI-powered analysis. Real-time on-chain data, whale tracking, and macro indicators for informed trading decisions.',
     keywords: 'crypto, sentiment, analysis, bitcoin, ethereum, trading, on-chain, market intelligence',

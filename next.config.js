@@ -1,22 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['sharp']
-  },
-  serverRuntimeConfig: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-  async headers() {
-    return [
+  images: {
+    remotePatterns: [
       {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' }
-        ],
+        protocol: 'https',
+        hostname: 'coin-images.coingecko.com',
+        port: '',
+        pathname: '/coins/images/**',
       },
-    ]
+      {
+        protocol: 'https',
+        hostname: 'assets.coingecko.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+  // Experimental features
+  experimental: {
+    optimizePackageImports: ['framer-motion'],
   },
 }
 
