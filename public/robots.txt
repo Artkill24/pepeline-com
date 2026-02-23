@@ -1,5 +1,12 @@
+# Allow all crawlers
 User-agent: *
 Allow: /
-Disallow: /api/
 
+# Sitemap location
 Sitemap: https://pepeline.com/sitemap.xml
+
+# Crawl-delay for polite bots
+Crawl-delay: 10
+
+# Disallow admin pages (if any)
+# Disallow: /admin

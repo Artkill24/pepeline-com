@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-02-23T12:55:15.845895",
+  "pepeline": {
+    "index": 5,
+    "signal": "BUY",
+    "strength": 45
+  },
+  "toollab": {
+    "accumulation": 4,
+    "distribution": 4,
+    "signal": "NEUTRAL",
+    "net_weight": 0
+  },
+  "correlation": {
+    "alignment": "WEAK",
+    "hypothesis_1": false,
+    "hypothesis_2": false
+  }
+}
