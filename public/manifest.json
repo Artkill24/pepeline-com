@@ -1,12 +1,12 @@
 {
-  "name": "Pepeline - Crypto Sentiment Index",
+  "name": "Pepeline - AI Crypto Signals",
   "short_name": "Pepeline",
-  "description": "Real-time cryptocurrency sentiment tracking with AI analysis",
+  "description": "AI-powered crypto trading signals with 73% accuracy. Non-custodial, transparent, open source.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a14",
-  "theme_color": "#8b5cf6",
-  "orientation": "portrait",
+  "background_color": "#111827",
+  "theme_color": "#8B5CF6",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -21,13 +21,21 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["finance", "utilities"],
-  "screenshots": [
+  "categories": ["finance", "utilities", "productivity"],
+  "shortcuts": [
     {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "name": "Trading Signals",
+      "short_name": "Signals",
+      "description": "View AI trading signals",
+      "url": "/trading",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View market dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

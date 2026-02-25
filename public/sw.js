@@ -1,29 +1,13 @@
-const CACHE_NAME = 'pepeline-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
-];
-
+// Simple service worker for PWA
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => response || fetch(event.request))
-  );
+  console.log('Service Worker installing.');
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) =>
-            Promise.all(cacheNames.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
-        )
-    );
+  console.log('Service Worker activating.');
+});
+
+self.addEventListener('fetch', (event) => {
+  // Let browser handle all requests (no offline caching for now)
+  return;
 });

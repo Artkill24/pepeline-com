@@ -1,0 +1,2 @@
+TODO: Create icon-192.png (192x192)
+TODO: Create icon-512.png (512x512)

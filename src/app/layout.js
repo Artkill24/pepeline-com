@@ -11,56 +11,17 @@ export const metadata = {
     template: '%s | Pepeline'
   },
   description: 'Get explainable AI-powered crypto trading signals backed by Fear & Greed Index, whale tracking, and on-chain data. 73% backtested accuracy. Non-custodial. Open source.',
-  keywords: [
-    'crypto trading signals',
-    'AI crypto trading',
-    'cryptocurrency sentiment analysis',
-    'crypto AI bot',
-    'bitcoin trading signals',
-    'ethereum trading signals',
-    'crypto whale tracking',
-    'fear and greed index',
-    'crypto market analysis',
-    'automated crypto trading',
-    'best crypto trading bot 2026',
-    'explainable AI crypto',
-    'transparent crypto trading',
-    'non-custodial crypto platform'
-  ],
-  authors: [{ name: 'Saad', url: 'https://pepeline.com' }],
-  creator: 'Pepeline Team',
-  publisher: 'Pepeline',
-  openGraph: {
-    title: 'Pepeline - AI Crypto Trading Signals with 73% Accuracy',
-    description: 'Explainable AI crypto signals. Track sentiment, whales, and on-chain data. 73% accuracy. Non-custodial. Open source.',
-    url: 'https://pepeline.com',
-    siteName: 'Pepeline',
-    images: [{
-      url: '/og-image.png',
-      width: 1200,
-      height: 630,
-      alt: 'Pepeline - AI Crypto Intelligence',
-    }],
-    locale: 'en_US',
-    type: 'website',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Pepeline'
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Pepeline - AI Crypto Trading Signals with 73% Accuracy',
-    description: 'Explainable AI crypto signals. 73% accuracy. Non-custodial. Open source.',
-    creator: '@pepeline_index',
-    images: ['/og-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
   },
 }
 
@@ -68,6 +29,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Pepeline" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        
+        {/* Google Analytics */}
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-CVGPD06Z46"
