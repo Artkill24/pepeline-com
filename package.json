@@ -17,13 +17,17 @@
     "@solana/wallet-adapter-solflare": "^0.6.32",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.95.3",
+    "canvas": "^3.2.1",
     "framer-motion": "^11.18.2",
     "next": "14.2.35",
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",
+    "openai": "^6.25.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.0",
+    "replicate": "^1.4.0",
+    "sharp": "^0.34.5",
     "twitter-api-v2": "^1.29.0"
   },
   "devDependencies": {

@@ -1,57 +1,88 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import SolanaWalletProvider from '@/components/WalletProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://pepeline.com"),
-    title: 'Pepeline - Real-time Crypto Sentiment Index',
-    description: 'Track cryptocurrency market sentiment with AI-powered analysis. Real-time on-chain data, whale tracking, and macro indicators for informed trading decisions.',
-    keywords: 'crypto, sentiment, analysis, bitcoin, ethereum, trading, on-chain, market intelligence',
-    authors: [{ name: 'Pepeline Team' }],
-    openGraph: {
-        title: 'Pepeline - Crypto Sentiment Index',
-        description: 'AI-powered cryptocurrency sentiment tracking and market intelligence',
-        url: 'https://pepeline.com',
-        siteName: 'Pepeline',
-        type: 'website',
-        images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Pepeline Crypto Sentiment Index' }]
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Pepeline - Crypto Sentiment Index',
-        description: 'Real-time crypto market sentiment tracking',
-        images: ['/twitter-image.png'],
-    },
-    robots: { index: true, follow: true, googleBot: { index: true, follow: true } }
+  title: {
+    default: 'Pepeline - AI Crypto Trading Signals with 73% Accuracy',
+    template: '%s | Pepeline'
+  },
+  description: 'Get explainable AI-powered crypto trading signals backed by Fear & Greed Index, whale tracking, and on-chain data. 73% backtested accuracy. Non-custodial. Open source.',
+  keywords: 'crypto, sentiment, analysis, bitcoin, ethereum, trading, on-chain, market intelligence, AI agents',
+  authors: [{ name: 'Pepeline Team' }],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Pepeline'
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  openGraph: {
+    title: 'Pepeline - AI Crypto Trading Signals',
+    description: 'AI-powered cryptocurrency sentiment tracking and market intelligence with 73% accuracy',
+    url: 'https://pepeline.com',
+    siteName: 'Pepeline',
+    type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Pepeline Crypto Sentiment Index' }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pepeline - AI Crypto Trading Signals',
+    description: 'Real-time crypto market sentiment tracking with AI agents',
+    images: ['/twitter-image.png'],
+    creator: '@pepeline_index'
+  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } }
 };
 
 export default function RootLayout({ children }) {
-    return (
-        <html lang="en">
-            <head>
-                <link rel="icon" href="/favicon.ico" />
-                <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-                <meta name="theme-color" content="#10b981" />
-            </head>
-            <body className={inter.className}>
-                <SolanaWalletProvider>
-                    {children}
-                </SolanaWalletProvider>
-                {process.env.NEXT_PUBLIC_GA_ID && (
-                    <script
-                        dangerouslySetInnerHTML={{
-                            __html: `
-                                window.dataLayer = window.dataLayer || [];
-                                function gtag(){dataLayer.push(arguments);}
-                                gtag('js', new Date());
-                                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
-                            `
-                        }}
-                    />
-                )}
-            </body>
-        </html>
-    );
+  return (
+    <html lang="en">
+      <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Pepeline" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="icon" href="/favicon.svg" />
+        <meta name="theme-color" content="#8B5CF6" />
+
+        {/* Google Analytics */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-CVGPD06Z46"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-CVGPD06Z46', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className}>
+        <SolanaWalletProvider>
+          {children}
+        </SolanaWalletProvider>
+      </body>
+    </html>
+  );
 }
