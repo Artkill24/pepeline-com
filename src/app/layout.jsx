@@ -20,19 +20,13 @@ export const metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Pepeline'
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   openGraph: {
     title: 'Pepeline - AI Crypto Trading Signals',
     description: 'AI-powered cryptocurrency sentiment tracking and market intelligence with 73% accuracy',
     url: 'https://pepeline.com',
     siteName: 'Pepeline',
     type: 'website',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Pepeline Crypto Sentiment Index' }]
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }]
   },
   twitter: {
     card: 'summary_large_image',
@@ -41,14 +35,22 @@ export const metadata = {
     images: ['/twitter-image.png'],
     creator: '@pepeline_index'
   },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true } }
+  robots: { index: true, follow: true }
+};
+
+// SEPARATE viewport export (fix warnings)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#8B5CF6'
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -56,9 +58,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="Pepeline" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <link rel="icon" href="/favicon.svg" />
-        <meta name="theme-color" content="#8B5CF6" />
 
-        {/* Google Analytics */}
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-CVGPD06Z46"
